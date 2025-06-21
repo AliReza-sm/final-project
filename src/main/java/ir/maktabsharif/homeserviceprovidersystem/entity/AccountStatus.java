@@ -1,5 +1,5 @@
 package ir.maktabsharif.homeserviceprovidersystem.entity;
 
-public enum UserRoll {
-    MANAGER, EXPERT, CUSTOMER
+public enum AccountStatus {
+    PENDING_APPROVAL, APPROVED
 }

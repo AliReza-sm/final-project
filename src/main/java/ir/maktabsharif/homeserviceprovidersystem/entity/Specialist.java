@@ -14,11 +14,21 @@ import java.util.Set;
 
 public class Specialist extends User {
 
-    @Column(nullable = false)
-    private String profilePhoto;
+    @Column
+    private String profilePhotoPath;
+
+    @Lob
+    @Basic(fetch = FetchType.LAZY)
+    private byte[] profilePhotoBytes;
+
+    @Enumerated(EnumType.STRING)
+    private AccountStatus accountStatus;
 
     @Enumerated(EnumType.STRING)
     private SpecialistStatus specialistStatus;
+
+    @Column
+    private Double score;
 
     @ManyToMany
     @JoinTable(name = "specialist_service",
@@ -26,6 +36,4 @@ public class Specialist extends User {
             inverseJoinColumns = @JoinColumn(name = "service_id"))
     private Set<Service> specialistServices;
 
-    @Column
-    private Proposal proposal;
 }

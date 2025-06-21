@@ -5,7 +5,7 @@ import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity
 @Setter
@@ -36,11 +36,15 @@ public class User extends BaseEntity<Long>{
     @Pattern(regexp = "^[A-Za-z0-9]{8}$", message = "password must be at least 8 character or number")
     private String password;
 
-    @Enumerated(EnumType.STRING)
-    @NotBlank(message = "UserRoll can not be blank")
-    private UserRoll userRoll;
-
-    @Column(nullable = false, unique = true)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     @NotNull(message = "wallet can not be null")
     private Wallet wallet;
+
+    @Column
+    private LocalDateTime registrationDate;
+
+    @PrePersist
+    public void prePersist(){
+        registrationDate = LocalDateTime.now();
+    }
 }
