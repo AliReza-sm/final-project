@@ -1,0 +1,15 @@
+package ir.maktabsharif.homeserviceprovidersystem.repository;
+
+import ir.maktabsharif.homeserviceprovidersystem.entity.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+
+public interface UserRepository <T extends User> extends CrudRepository<T,Long> {
+
+    @Query
+    Optional<T> findByEmail(String email);
+
+}
