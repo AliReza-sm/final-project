@@ -1,4 +1,4 @@
-package ir.maktabsharif.homeserviceprovidersystem.Config;
+package ir.maktabsharif.homeserviceprovidersystem.config;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Persistence;

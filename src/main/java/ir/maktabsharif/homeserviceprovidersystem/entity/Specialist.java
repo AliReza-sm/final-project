@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -34,6 +35,6 @@ public class Specialist extends User {
     @JoinTable(name = "specialist_service",
             joinColumns = @JoinColumn(name = "specialist_id"),
             inverseJoinColumns = @JoinColumn(name = "service_id"))
-    private Set<Service> specialistServices;
+    private Set<Service> specialistServices = new HashSet<>();
 
 }

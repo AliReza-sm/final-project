@@ -7,7 +7,9 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "services")
@@ -33,4 +35,7 @@ public class Service extends BaseEntity<Long> {
 
     @OneToMany(mappedBy = "parentService", cascade = CascadeType.ALL)
     private List<Service> subServices = new ArrayList<>();
+
+    @ManyToMany(mappedBy = "specialistServices")
+    private Set<Specialist> qualifiedSpecialists = new HashSet<>();
 }
