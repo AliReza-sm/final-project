@@ -33,7 +33,9 @@ public class CustomerService {
         wallet.setUser(customer);
         customer.setWallet(wallet);
         Customer savedCustomer = customerRepository.save(customer);
-        return modelMapper.map(savedCustomer, CustomerResponseDto.class);
+        return new CustomerResponseDto(savedCustomer.getId(),
+                savedCustomer.getFirstname(), savedCustomer.getLastname(),
+                savedCustomer.getEmail(), savedCustomer.getRegistrationDate());
     }
 
     public OrderResponseDto createOrder(Long customerId, OrderRequestDto dto){
@@ -49,7 +51,11 @@ public class CustomerService {
         order.setService(service);
         order.setOrderStatus(OrderStatus.WAITING_FOR_SPECIALIST_OFFERS);
         Order savedOrder = orderRepository.save(order);
-        return modelMapper.map(savedOrder, OrderResponseDto.class);
+        return new OrderResponseDto(savedOrder.getId(), savedOrder.getProposedPrice(),
+                savedOrder.getDescription(), savedOrder.getAddress()
+        ,savedOrder.getProposedStartDate(), savedOrder.getOrderStatus(),
+                savedOrder.getService(), savedOrder.getCustomer(),
+                savedOrder.getOffers());
     }
 
     public void selectOfferForOrder(Long customerId, Long orderId, Long offerId){
@@ -127,7 +133,7 @@ public class CustomerService {
         return customer.getWallet().getBalance();
     }
 
-    public void addFundsToWallet(Long customerId, Long amount){
+    public void addFundsToWallet(Long customerId, Double amount){
         if (amount <= 0){
             throw new IllegalArgumentException("amount must be greater than 0");
         }

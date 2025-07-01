@@ -1,14 +1,19 @@
 package ir.maktabsharif.homeserviceprovidersystem.dto;
 
+import ir.maktabsharif.homeserviceprovidersystem.entity.OfferStatus;
+import ir.maktabsharif.homeserviceprovidersystem.entity.Order;
+import ir.maktabsharif.homeserviceprovidersystem.entity.Specialist;
+
 import java.time.LocalDateTime;
 
 public record OfferResponseDto(
         Long id,
-        OrderResponseDto order,
+        Order order,
         Double proposedPrice,
-        Integer durationInHours,
+        Integer timeToEndTheJobInHours,
         LocalDateTime proposedStartTime,
-        String status,
-        SpecialistResponseDto specialist
+        LocalDateTime submissionTime,
+        OfferStatus offerStatus,
+        Specialist specialist
 ) {
 }

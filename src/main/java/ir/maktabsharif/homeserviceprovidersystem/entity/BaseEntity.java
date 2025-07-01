@@ -5,12 +5,13 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.io.Serializable;
 
 @MappedSuperclass
 @Getter
-
+@Setter
 public class BaseEntity <ID extends Serializable> {
 
     @Id

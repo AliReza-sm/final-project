@@ -37,4 +37,12 @@ public class OrderRepositoryImpl extends CrudRepositoryImpl<Order, Long> impleme
         }
         return orders;
     }
+
+    @Override
+    public boolean existsByServiceId(Long serviceId) {
+        entityManager.createQuery("select o from Order o where o.service.id = :serviceId", Order.class)
+                .setParameter("serviceId", serviceId)
+                .getSingleResult();
+        return true;
+    }
 }

@@ -13,5 +13,6 @@ public interface OrderRepository extends CrudRepository<Order, Long> {
 
     List<Order> findByStatus(OrderStatus orderStatus);
     List<Order> findByStatusAndService(OrderStatus orderStatus, Set<Service> services);
+    boolean existsByServiceId(Long serviceId);
 
 }

@@ -1,5 +1,10 @@
 package ir.maktabsharif.homeserviceprovidersystem.dto;
 
+import ir.maktabsharif.homeserviceprovidersystem.entity.Customer;
+import ir.maktabsharif.homeserviceprovidersystem.entity.Offer;
+import ir.maktabsharif.homeserviceprovidersystem.entity.OrderStatus;
+import ir.maktabsharif.homeserviceprovidersystem.entity.Service;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -9,9 +14,9 @@ public record OrderResponseDto(
         String description,
         String address,
         LocalDateTime proposedStartDate,
-        String status,
-        ServiceResponseDto service,
-        CustomerResponseDto customer,
-        List<OfferResponseDto> offers
+        OrderStatus orderStatus,
+        Service service,
+        Customer customer,
+        List<Offer> offers
 ) {
 }

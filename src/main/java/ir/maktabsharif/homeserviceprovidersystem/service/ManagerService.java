@@ -51,16 +51,20 @@ public class ManagerService {
     }
 
     public void deleteService(Long serviceId) {
-        if (!serviceRepository.findById(serviceId).isPresent()){
+        if (serviceRepository.findById(serviceId).isEmpty()){
             throw new ResourceNotFoundException("service with id " + serviceId + " not found");
         }
-        List<Order> allOrder = orderRepository.findAll();
-        for (Order order : allOrder){
-            if (order.getService().getId().equals(serviceId) && order.getOrderStatus().equals(OrderStatus.IN_PROGRESS)){
-                throw new RuntimeException("order with this service id in Order is in progress");
-            }
+        if (orderRepository.existsByServiceId(serviceId)) {
+            throw new IllegalStateException("Cannot delete a service that is currently associated with one or more orders.");
         }
         serviceRepository.deleteById(serviceId);
+    }
+
+    public void approveSpecialist(Long specialistId){
+        Specialist specialist = specialistRepository.findById(specialistId)
+                .orElseThrow(() -> new ResourceNotFoundException("specialist with id " + specialistId + " not found"));
+        specialist.setAccountStatus(AccountStatus.APPROVED);
+        specialistRepository.save(specialist);
     }
 
     public void assignSpecialistToService(Long serviceId, Long specialistId) {

@@ -57,7 +57,7 @@ public class SpecialistService {
         if (offerRepository.findBySpecialistAndOfferStatus(specialist, OfferStatus.ACCEPTED).isPresent()) {
             throw new IllegalArgumentException("cannot update specialist with an active job");
         }
-        modelMapper.map(dto, specialist);
+        specialist.setFirstname(dto.firstName());
         specialistRepository.update(specialist);
     }
 
