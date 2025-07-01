@@ -4,6 +4,7 @@ import ir.maktabsharif.homeserviceprovidersystem.entity.BaseEntity;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaQuery;
+import lombok.RequiredArgsConstructor;
 
 import java.io.Serializable;
 import java.util.List;
