@@ -8,6 +8,7 @@ import ir.maktabsharif.homeserviceprovidersystem.exception.ResourceNotFoundExcep
 import ir.maktabsharif.homeserviceprovidersystem.repository.OfferRepository;
 import ir.maktabsharif.homeserviceprovidersystem.repository.OrderRepository;
 import ir.maktabsharif.homeserviceprovidersystem.repository.SpecialistRepository;
+import ir.maktabsharif.homeserviceprovidersystem.util.MyValidator;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,6 +34,7 @@ public class SpecialistService {
 //    private String storageFileUploadDir;
 
     public SpecialistResponseDto register(SpecialistRegistrationDto dto) throws IOException {
+        MyValidator.validate(dto);
         if (specialistRepository.findByEmail(dto.email()).isPresent()) {
             throw new AlreadyExistException("specialist with this email already exist");
         }
@@ -52,6 +54,7 @@ public class SpecialistService {
     }
 
     public void updateSpecialist(Long specialistId, UserUpdateDto dto) {
+        MyValidator.validate(dto);
         Specialist specialist = specialistRepository.findById(specialistId)
                 .orElseThrow(() -> new ResourceNotFoundException("specialist with this id does not exist"));
         if (offerRepository.findBySpecialistAndOfferStatus(specialist, OfferStatus.ACCEPTED).isPresent()) {

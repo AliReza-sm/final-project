@@ -6,6 +6,7 @@ import ir.maktabsharif.homeserviceprovidersystem.exception.AlreadyExistException
 import ir.maktabsharif.homeserviceprovidersystem.exception.NotAllowedException;
 import ir.maktabsharif.homeserviceprovidersystem.exception.ResourceNotFoundException;
 import ir.maktabsharif.homeserviceprovidersystem.repository.*;
+import ir.maktabsharif.homeserviceprovidersystem.util.MyValidator;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -25,6 +26,7 @@ public class CustomerService {
     private final ModelMapper modelMapper;
 
     public CustomerResponseDto register(CustomerRegistrationDto dto){
+        MyValidator.validate(dto);
         if (customerRepository.findByEmail(dto.email()).isPresent()){
             throw new AlreadyExistException("email already exist");
         }
@@ -39,6 +41,7 @@ public class CustomerService {
     }
 
     public OrderResponseDto createOrder(Long customerId, OrderRequestDto dto){
+        MyValidator.validate(dto);
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new ResourceNotFoundException("customer not found"));
         Service service = serviceRepository.findById(dto.serviceId())

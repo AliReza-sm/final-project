@@ -11,6 +11,7 @@ import ir.maktabsharif.homeserviceprovidersystem.repository.ManagerRepository;
 import ir.maktabsharif.homeserviceprovidersystem.repository.OrderRepository;
 import ir.maktabsharif.homeserviceprovidersystem.repository.ServiceRepository;
 import ir.maktabsharif.homeserviceprovidersystem.repository.SpecialistRepository;
+import ir.maktabsharif.homeserviceprovidersystem.util.MyValidator;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +30,7 @@ public class ManagerService {
     private final ManagerRepository managerRepository;
 
     public ServiceResponseDto createService(ServiceRequestDto serviceRequestDto) {
+        MyValidator.validate(serviceRequestDto);
         if (serviceRepository.findByName(serviceRequestDto.name()).isPresent()){
             throw new AlreadyExistException("service with name " + serviceRequestDto.name() + " already exist");
         }
@@ -43,6 +45,7 @@ public class ManagerService {
     }
 
     public ServiceResponseDto updateService(Long serviceId, ServiceRequestDto serviceRequestDto) {
+        MyValidator.validate(serviceRequestDto);
         Service service = serviceRepository.findById(serviceId)
                 .orElseThrow(() -> new ResourceNotFoundException("service with id " + serviceId + " not found"));
         modelMapper.map(serviceRequestDto, service);
