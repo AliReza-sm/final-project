@@ -49,7 +49,12 @@ public class CustomerService {
         if (dto.proposedPrice() < service.getBasePrice()){
             throw new NotAllowedException("proposed price can not be less than base price");
         }
-        Order order = modelMapper.map(dto, Order.class);
+        Order order = new Order();
+        order.setService(service);
+        order.setProposedPrice(dto.proposedPrice());
+        order.setDescription(dto.description());
+        order.setAddress(dto.address());
+        order.setProposedStartDate(dto.proposedStartDate());
         order.setCustomer(customer);
         order.setService(service);
         order.setOrderStatus(OrderStatus.WAITING_FOR_SPECIALIST_OFFERS);
@@ -120,14 +125,16 @@ public class CustomerService {
         review.setOrder(order);
         Review savedReview = reviewRepository.save(review);
         updateSpecialistScore(order.getSelectedOffer().getSpecialist(), savedReview.getRating());
-        return modelMapper.map(savedReview, ReviewResponseDto.class);
+        return new ReviewResponseDto(savedReview.getId(), savedReview.getRating()
+        , savedReview.getComment(), savedReview.getOrder(), savedReview.getCustomer()
+        , savedReview.getSpecialist());
     }
 
     private void updateSpecialistScore(Specialist specialist, Integer rating) {
         specialist.setSumScore(specialist.getSumScore() + rating);
         specialist.setNumberOfReviews(specialist.getNumberOfReviews() + 1);
         specialist.setAverageScore(specialist.getSumScore()/specialist.getNumberOfReviews());
-        specialistRepository.save(specialist);
+        specialistRepository.update(specialist);
     }
 
     public Double showWalletBalance(Long customerId){

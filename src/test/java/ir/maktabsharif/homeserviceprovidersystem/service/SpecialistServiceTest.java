@@ -63,7 +63,7 @@ class SpecialistServiceTest {
     @Test
     void register_ShouldSaveSpecialist() throws IOException {
         MultipartFile file = Mockito.mock(MultipartFile.class);
-        SpecialistRegistrationDto dto = new SpecialistRegistrationDto("a", "a", "a@mail.com", "aaaaaaaaaa", file);
+        SpecialistRegistrationDto dto = new SpecialistRegistrationDto("a", "a", "a@mail.com", "AaBbCc11", file);
         when(specialistRepository.findByEmail(anyString())).thenReturn(Optional.empty());
         specialistService.register(dto);
         verify(specialistRepository, times(1)).save(any(Specialist.class));

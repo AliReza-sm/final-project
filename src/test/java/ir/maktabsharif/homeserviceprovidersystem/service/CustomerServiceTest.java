@@ -13,6 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -43,6 +44,7 @@ class CustomerServiceTest {
     private Customer testCustomer;
     private Order testOrder;
     private Offer testOffer;
+    private Review testReview;
 
     @BeforeEach
     void setUp() {
@@ -53,34 +55,48 @@ class CustomerServiceTest {
 
         Specialist specialist = new Specialist();
         specialist.setWallet(new Wallet());
+        specialist.setSumScore(20D);
+        specialist.setAverageScore(0D);
+        specialist.setNumberOfReviews(4);
 
         testOrder = new Order();
         testOrder.setId(100L);
         testOrder.setCustomer(testCustomer);
+        testOrder.setOffers(Mockito.mock(List.class));
+
 
         testOffer = new Offer();
         testOffer.setId(1000L);
         testOffer.setOrder(testOrder);
         testOffer.setProposedPrice(80.0);
         testOffer.setSpecialist(specialist);
+
+        testReview = new Review();
+        testReview.setId(1L);
+        testReview.setCustomer(testCustomer);
+        testReview.setOrder(testOrder);
+        testReview.setSpecialist(specialist);
+        testReview.setRating(5);
     }
 
     @Test
     void register() {
-        CustomerRegistrationDto dto = new CustomerRegistrationDto("a", "a", "a@mail.com", "aaaaaaaaaa");
+        CustomerRegistrationDto dto = new CustomerRegistrationDto("a", "a", "a@mail.com", "AaBbCc11");
         when(customerRepository.findByEmail(anyString())).thenReturn(Optional.empty());
         when(modelMapper.map(any(), any())).thenReturn(new Customer());
+        when(customerRepository.save(any())).thenReturn(testCustomer);
         customerService.register(dto);
         verify(customerRepository, times(1)).save(any(Customer.class));
     }
 
     @Test
     void createOrder() {
-        OrderRequestDto dto = new OrderRequestDto(1L, 60D, "", "", LocalDateTime.now().plusDays(1));
+        OrderRequestDto dto = new OrderRequestDto(1L, 60D, "aa", "aa", LocalDateTime.now().plusDays(1));
         Service service = new Service();
         service.setBasePrice(50.0);
         when(customerRepository.findById(1L)).thenReturn(Optional.of(testCustomer));
         when(serviceRepository.findById(any())).thenReturn(Optional.of(service));
+        when(orderRepository.save(any())).thenReturn(testOrder);
         customerService.createOrder(1L, dto);
         verify(orderRepository, times(1)).save(any(Order.class));
     }
@@ -113,6 +129,7 @@ class CustomerServiceTest {
         testOrder.setSelectedOffer(testOffer);
         when(orderRepository.findById(10L)).thenReturn(Optional.of(testOrder));
         when(modelMapper.map(any(), any())).thenReturn(new Review());
+        when(reviewRepository.save(any())).thenReturn(testReview);
         customerService.leaveReview(1L, dto);
         verify(reviewRepository, times(1)).save(any(Review.class));
         verify(specialistRepository, times(1)).update(any(Specialist.class));

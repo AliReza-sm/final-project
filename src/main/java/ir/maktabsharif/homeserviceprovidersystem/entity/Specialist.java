@@ -29,13 +29,13 @@ public class Specialist extends User {
     private SpecialistStatus specialistStatus;
 
     @Column
-    private Double sumScore;
+    private Double sumScore = 0D;
 
     @Column
-    private Integer numberOfReviews;
+    private Integer numberOfReviews = 0;
 
     @Column
-    private Double averageScore;
+    private Double averageScore = 0D;
 
     @ManyToMany
     @JoinTable(name = "specialist_service",
