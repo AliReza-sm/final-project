@@ -2,16 +2,18 @@ package ir.maktabsharif.homeserviceprovidersystem.repository;
 
 import ir.maktabsharif.homeserviceprovidersystem.entity.BaseEntity;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaQuery;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.Serializable;
 import java.util.List;
 import java.util.Optional;
 
 public abstract class CrudRepositoryImpl <T extends BaseEntity<Long>, ID extends Serializable> implements CrudRepository<T, ID>{
-
+    @Autowired
     protected EntityManager entityManager;
 
     protected final Class<T> entityClass;

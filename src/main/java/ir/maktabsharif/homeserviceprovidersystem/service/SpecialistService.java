@@ -61,6 +61,7 @@ public class SpecialistService {
             throw new IllegalArgumentException("cannot update specialist with an active job");
         }
         specialist.setFirstname(dto.firstName());
+        specialist.setAccountStatus(AccountStatus.PENDING_APPROVAL);
         specialistRepository.update(specialist);
     }
 

@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Set;
 
-@Repository
+
 public interface OrderRepository extends CrudRepository<Order, Long> {
 
     List<Order> findByStatus(OrderStatus orderStatus);

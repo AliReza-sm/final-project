@@ -9,12 +9,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 
 @Component
 public class ManagerSeeder implements CommandLineRunner {
 
-    private static final Logger logger = LoggerFactory.getLogger(ManagerSeeder.class);
     private final ManagerRepository managerRepository;
 
     @Value("${manager.default-firstname}")
@@ -34,8 +34,9 @@ public class ManagerSeeder implements CommandLineRunner {
     }
 
     @Override
+    @Transactional
     public void run(String... args) throws Exception {
-        if (managerRepository.findAll().isEmpty()) {
+        if (managerRepository.findById(1L).isEmpty()) {
             createDefaultManager();
         }
     }

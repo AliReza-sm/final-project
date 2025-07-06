@@ -5,12 +5,14 @@ import ir.maktabsharif.homeserviceprovidersystem.entity.Order;
 import ir.maktabsharif.homeserviceprovidersystem.entity.OrderStatus;
 import ir.maktabsharif.homeserviceprovidersystem.entity.Service;
 import ir.maktabsharif.homeserviceprovidersystem.exception.ResourceNotFoundException;
+import jakarta.persistence.EntityManager;
+import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-
+@Repository
 public class OrderRepositoryImpl extends CrudRepositoryImpl<Order, Long> implements OrderRepository {
 
     public OrderRepositoryImpl() {
