@@ -14,15 +14,7 @@ import org.springframework.context.annotation.Primary;
 @ComponentScan(basePackages = "ir.maktabsharif")
 public class Config {
 
-    @Bean
-    public ModelMapper modelMapper() {
-        ModelMapper modelMapper = new ModelMapper();
-        modelMapper.getConfiguration().setSkipNullEnabled(true);
-        return modelMapper;
-    }
 
-    //login
-    //update specialist
-    //vaziyat specialist taghyir kone baed update
+
     //customer betone service va zir service haro bebine
 }
