@@ -1,9 +1,8 @@
 package ir.maktabsharif.homeserviceprovidersystem.service;
 
 import ir.maktabsharif.homeserviceprovidersystem.dto.ManagerUpdateDto;
-import ir.maktabsharif.homeserviceprovidersystem.dto.ServiceRequestDto;
-import ir.maktabsharif.homeserviceprovidersystem.dto.ServiceResponseDto;
-import ir.maktabsharif.homeserviceprovidersystem.dto.SpecialistResponseDto;
+import ir.maktabsharif.homeserviceprovidersystem.dto.ServiceDto;
+import ir.maktabsharif.homeserviceprovidersystem.dto.SpecialistDto;
 import ir.maktabsharif.homeserviceprovidersystem.entity.*;
 import ir.maktabsharif.homeserviceprovidersystem.exception.AlreadyExistException;
 import ir.maktabsharif.homeserviceprovidersystem.exception.ResourceNotFoundException;
@@ -13,7 +12,6 @@ import ir.maktabsharif.homeserviceprovidersystem.repository.ServiceRepository;
 import ir.maktabsharif.homeserviceprovidersystem.repository.SpecialistRepository;
 import ir.maktabsharif.homeserviceprovidersystem.util.MyValidator;
 import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -24,41 +22,60 @@ import java.util.List;
 public class ManagerService {
 
     private final ServiceRepository serviceRepository;
-    private final ModelMapper modelMapper;
     private final OrderRepository orderRepository;
     private final SpecialistRepository specialistRepository;
     private final ManagerRepository managerRepository;
 
-    public ServiceResponseDto createService(ServiceRequestDto serviceRequestDto) {
-        MyValidator.validate(serviceRequestDto);
-        if (serviceRepository.findByName(serviceRequestDto.name()).isPresent()){
-            throw new AlreadyExistException("service with name " + serviceRequestDto.name() + " already exist");
+    public ServiceDto.ServiceResponseDto createService(ServiceDto.ServiceRequestDto serviceRequestDto) {
+        if (serviceRepository.findByName(serviceRequestDto.getName()).isPresent()){
+            throw new AlreadyExistException("service with name " + serviceRequestDto.getName() + " already exist");
         }
-        Service service = modelMapper.map(serviceRequestDto, Service.class);
-        if (serviceRequestDto.parentServiceId() != null){
-           Service parent = serviceRepository.findById(serviceRequestDto.parentServiceId())
-                    .orElseThrow(() -> new ResourceNotFoundException("parent service with id " + serviceRequestDto.parentServiceId() + " not found"));
+        Service service = ServiceDto.mapToEntity(serviceRequestDto);
+        if (serviceRequestDto.getParentServiceId() != null){
+           Service parent = serviceRepository.findById(serviceRequestDto.getParentServiceId())
+                    .orElseThrow(() -> new ResourceNotFoundException("parent service with id " + serviceRequestDto.getParentServiceId() + " not found"));
            service.setParentService(parent);
+           parent.getSubServices().add(service);
         }
-        Service savedService = serviceRepository.save(service);
-        return modelMapper.map(savedService, ServiceResponseDto.class);
+        return ServiceDto.mapToDto(serviceRepository.save(service));
     }
 
-    public ServiceResponseDto updateService(Long serviceId, ServiceRequestDto serviceRequestDto) {
-        MyValidator.validate(serviceRequestDto);
-        Service service = serviceRepository.findById(serviceId)
-                .orElseThrow(() -> new ResourceNotFoundException("service with id " + serviceId + " not found"));
-        modelMapper.map(serviceRequestDto, service);
+    public ServiceDto.ServiceResponseDto updateService(ServiceDto.ServiceUpdateDto serviceUpdateDto) {
+        Service service = serviceRepository.findById(serviceUpdateDto.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("service with id " + serviceUpdateDto.getId() + " not found"));
+        setNotNullFilledInService(service, serviceUpdateDto);
         Service updatedService = serviceRepository.update(service);
-        return modelMapper.map(updatedService, ServiceResponseDto.class);
+        return ServiceDto.mapToDto(updatedService);
+    }
+
+    private void setNotNullFilledInService(Service service, ServiceDto.ServiceUpdateDto serviceUpdateDto) {
+        if (serviceUpdateDto.getName() != null && serviceRepository.findByName(serviceUpdateDto.getName()).isPresent()){
+            throw new AlreadyExistException("service with name " + serviceUpdateDto.getName() + " already exist");
+        }
+        if (serviceUpdateDto.getName() != null){service.setName(serviceUpdateDto.getName());}
+        if (serviceUpdateDto.getDescription() != null){
+            service.setDescription(serviceUpdateDto.getDescription());
+        }
+        if (serviceUpdateDto.getBasePrice() != null){
+            service.setBasePrice(serviceUpdateDto.getBasePrice());
+        }
+        if (serviceUpdateDto.getParentServiceId() != null){
+            Service parent = serviceRepository.findById(serviceUpdateDto.getParentServiceId())
+                    .orElseThrow(() -> new ResourceNotFoundException("parent service with id " + serviceUpdateDto.getParentServiceId() + " not found"));
+            service.getParentService().getSubServices().remove(service);
+            service.setParentService(parent);
+            parent.getSubServices().add(service);
+        }
     }
 
     public void deleteService(Long serviceId) {
-        if (serviceRepository.findById(serviceId).isEmpty()){
-            throw new ResourceNotFoundException("service with id " + serviceId + " not found");
-        }
+        Service service = serviceRepository.findById(serviceId)
+                .orElseThrow(() -> new ResourceNotFoundException("service with id " + serviceId + " not found"));
         if (orderRepository.existsByServiceId(serviceId)) {
             throw new IllegalStateException("Cannot delete a service that is currently associated with one or more orders.");
+        }
+        if (service.getParentService() != null){
+            service.getParentService().getSubServices().remove(service);
         }
         serviceRepository.deleteById(serviceId);
     }
@@ -88,9 +105,9 @@ public class ManagerService {
         specialistRepository.save(specialist);
     }
 
-    public List<SpecialistResponseDto> findAllSpecialists() {
+    public List<SpecialistDto.SpecialistResponseDto> findAllSpecialists() {
         return specialistRepository.findAll().stream()
-                .map(s -> modelMapper.map(s, SpecialistResponseDto.class))
+                .map(SpecialistDto::mapToDto)
                 .toList();
     }
 

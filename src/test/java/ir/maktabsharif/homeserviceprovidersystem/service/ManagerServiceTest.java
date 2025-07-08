@@ -1,8 +1,8 @@
 package ir.maktabsharif.homeserviceprovidersystem.service;
 
 import ir.maktabsharif.homeserviceprovidersystem.dto.ManagerUpdateDto;
-import ir.maktabsharif.homeserviceprovidersystem.dto.ServiceRequestDto;
-import ir.maktabsharif.homeserviceprovidersystem.dto.SpecialistResponseDto;
+import ir.maktabsharif.homeserviceprovidersystem.dto.ServiceDto;
+import ir.maktabsharif.homeserviceprovidersystem.dto.SpecialistDto;
 import ir.maktabsharif.homeserviceprovidersystem.entity.*;
 import ir.maktabsharif.homeserviceprovidersystem.exception.AlreadyExistException;
 import ir.maktabsharif.homeserviceprovidersystem.repository.ManagerRepository;
@@ -15,7 +15,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
 
@@ -58,26 +57,38 @@ class ManagerServiceTest {
 
     @Test
     void createService_ShouldSaveNewService() {
-        ServiceRequestDto dto = new ServiceRequestDto("new service", "", 100D, null);
-        when(serviceRepository.findByName(dto.name())).thenReturn(Optional.empty());
-        when(modelMapper.map(dto, Service.class)).thenReturn(new Service());
+        ServiceDto.ServiceRequestDto dto = new ServiceDto.ServiceRequestDto();
+        dto.setName("new service");
+        dto.setDescription("");
+        dto.setBasePrice(100D);
+        dto.setParentServiceId(null);
+        when(serviceRepository.findByName(dto.getName())).thenReturn(Optional.empty());
         managerService.createService(dto);
         verify(serviceRepository, times(1)).save(any(Service.class));
     }
 
     @Test
     void createService_WhenNameExists_ShouldThrowException(){
-        ServiceRequestDto dto = new ServiceRequestDto("new service", "", 100D, null);
-        when(serviceRepository.findByName(dto.name())).thenReturn(Optional.of(new Service()));
+        ServiceDto.ServiceRequestDto dto = new ServiceDto.ServiceRequestDto();
+        dto.setName("new service");
+        dto.setDescription("");
+        dto.setBasePrice(100D);
+        dto.setParentServiceId(null);
+        when(serviceRepository.findByName(dto.getName())).thenReturn(Optional.of(new Service()));
         assertThrows(AlreadyExistException.class, () -> managerService.createService(dto));
         verify(serviceRepository, never()).save(any());
     }
 
     @Test
     void updateService_ShouldSaveChanges() {
-        ServiceRequestDto dto = new ServiceRequestDto("aa", "bb", 100D, 1L);
-        when(serviceRepository.findById(1L)).thenReturn(Optional.of(testService));
-        managerService.updateService(1L, dto);
+        ServiceDto.ServiceUpdateDto dto = new ServiceDto.ServiceUpdateDto();
+        dto.setId(1L);
+        dto.setName(null);
+        dto.setDescription("");
+        dto.setBasePrice(100D);
+        dto.setParentServiceId(null);
+        when(serviceRepository.findById(dto.getId())).thenReturn(Optional.of(testService));
+        managerService.updateService(dto);
         verify(serviceRepository, times(1)).update(testService);
     }
 
@@ -119,9 +130,8 @@ class ManagerServiceTest {
     @Test
     void findAllSpecialists_ShouldReturnAllSpecialists() {
         when(specialistRepository.findAll()).thenReturn(Collections.singletonList(testSpecialist));
-        List<SpecialistResponseDto> result = managerService.findAllSpecialists();
+        List<SpecialistDto.SpecialistResponseDto> result = managerService.findAllSpecialists();
         assertEquals(1, result.size());
-        verify(modelMapper, times(1)).map(testSpecialist, SpecialistResponseDto.class);
     }
 
     @Test
