@@ -6,6 +6,7 @@ import ir.maktabsharif.homeserviceprovidersystem.entity.OrderStatus;
 import ir.maktabsharif.homeserviceprovidersystem.entity.Service;
 import ir.maktabsharif.homeserviceprovidersystem.exception.ResourceNotFoundException;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
@@ -42,9 +43,13 @@ public class OrderRepositoryImpl extends CrudRepositoryImpl<Order, Long> impleme
 
     @Override
     public boolean existsByServiceId(Long serviceId) {
-        entityManager.createQuery("select o from Order o where o.service.id = :serviceId", Order.class)
-                .setParameter("serviceId", serviceId)
-                .getSingleResult();
-        return true;
+        try {
+            entityManager.createQuery("select o from Order o where o.service.id = :serviceId", Order.class)
+                    .setParameter("serviceId", serviceId)
+                    .getSingleResult();
+            return true;
+        }catch (NoResultException e) {
+            return false;
+        }
     }
 }

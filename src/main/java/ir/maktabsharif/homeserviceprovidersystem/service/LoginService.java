@@ -20,8 +20,12 @@ public class LoginService {
     private final ManagerRepository managerRepository;
 
     public UserDto.LoginResponseDto login(UserDto.LoginRequestDto loginRequestDto) {
-        Optional<? extends User> loggedInUser = managerRepository.findByEmail(loginRequestDto.getEmail());
-        String role = "manager";
+        Optional<? extends User> loggedInUser = Optional.empty();
+        String role = "";
+        if (managerRepository.findByEmail(loginRequestDto.getEmail()).isPresent()) {
+            loggedInUser = managerRepository.findByEmail(loginRequestDto.getEmail());
+            role = "manager";
+        }
         if (loggedInUser.isEmpty()) {
             loggedInUser = specialistRepository.findByEmail(loginRequestDto.getEmail());
             role = "specialist";

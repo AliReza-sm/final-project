@@ -33,7 +33,7 @@ public class User extends BaseEntity<Long>{
 
     @Column(nullable = false)
     @NotBlank(message = "password can not be blank")
-    @Pattern(regexp = "^[A-Za-z0-9]{8}$", message = "password must be at least 8 character or number")
+    @Pattern(regexp = "^[A-Za-z0-9]{8,}$", message = "password must be at least 8 character or number")
     private String password;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)

@@ -8,6 +8,7 @@ import jakarta.persistence.EntityManager;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+
 @Repository
 public class OfferRepositoryImpl extends CrudRepositoryImpl<Offer, Long> implements OfferRepository {
 
@@ -18,13 +19,9 @@ public class OfferRepositoryImpl extends CrudRepositoryImpl<Offer, Long> impleme
 
     @Override
     public Optional<Offer> findBySpecialistAndOfferStatus(Specialist specialist, OfferStatus offerStatus) {
-        try {
-            return Optional.ofNullable(entityManager.createQuery("select o from Offer o where o.specialist = :specialist and o.offerStatus = :offerStatus", Offer.class)
-                    .setParameter("specialist", specialist)
-                    .setParameter("offerStatus", offerStatus)
-                    .getSingleResult());
-        } catch (ResourceNotFoundException e) {
-            throw new ResourceNotFoundException("Offer with specialist " + specialist + " and offerStatus " + offerStatus + " not found");
-        }
+        return entityManager.createQuery("select o from Offer o where o.specialist = :specialist and o.offerStatus = :offerStatus", Offer.class)
+                .setParameter("specialist", specialist)
+                .setParameter("offerStatus", offerStatus)
+                .getResultList().stream().findFirst();
     }
 }

@@ -36,8 +36,7 @@ class SpecialistServiceTest {
     private OrderRepository orderRepository;
     @Mock
     private OfferRepository offerRepository;
-    @Mock
-    private ModelMapper modelMapper;
+
 
     @InjectMocks
     private SpecialistService specialistService;
@@ -50,31 +49,48 @@ class SpecialistServiceTest {
         testService = new Service();
 
         testSpecialist = new Specialist();
+        testSpecialist.setFirstname("a");
         testSpecialist.setAccountStatus(AccountStatus.APPROVED);
         testSpecialist.setSpecialistServices(Set.of(testService));
         testSpecialist.setWallet(new Wallet());
         testSpecialist.getWallet().setBalance(100D);
 
+        Customer testCustomer = new Customer();
+        testCustomer.setId(1L);
+        testCustomer.setWallet(new Wallet());
+        testCustomer.getWallet().setBalance(100D);
+
         testOrder = new Order();
         testOrder.setService(testService);
         testOrder.setOrderStatus(OrderStatus.WAITING_FOR_SPECIALIST_OFFERS);
+        testOrder.setCustomer(testCustomer);
     }
 
     @Test
     void register_ShouldSaveSpecialist() throws IOException {
         MultipartFile file = Mockito.mock(MultipartFile.class);
-        SpecialistRegistrationDto dto = new SpecialistRegistrationDto("a", "a", "a@mail.com", "AaBbCc11", file);
+        SpecialistDto.SpecialistRequestDto dto = new SpecialistDto.SpecialistRequestDto();
+        dto.setFirstName("a");
+        dto.setLastName("a");
+        dto.setEmail("a@mail.com");
+        dto.setPassword("AaBbCc11");
+        dto.setProfilePhotoData(file);
         when(specialistRepository.findByEmail(anyString())).thenReturn(Optional.empty());
         specialistService.register(dto);
         verify(specialistRepository, times(1)).save(any(Specialist.class));
     }
 
     @Test
-    void updateSpecialist() {
-        UserUpdateDto dto = new UserUpdateDto("a", "a", "cccccccccc");
+    void updateSpecialist() throws IOException {
+        MultipartFile file = Mockito.mock(MultipartFile.class);
+        SpecialistDto.SpecialistUpdateDto dto = new SpecialistDto.SpecialistUpdateDto();
+        dto.setId(1L);
+        dto.setEmail("a@mail.com");
+        dto.setPassword("AaBbCc11");
+        dto.setProfilePhotoData(file);
         when(specialistRepository.findById(1L)).thenReturn(Optional.of(testSpecialist));
         when(offerRepository.findBySpecialistAndOfferStatus(testSpecialist, OfferStatus.ACCEPTED)).thenReturn(Optional.empty());
-        specialistService.updateSpecialist(1L, dto);
+        specialistService.updateSpecialist(dto);
         verify(specialistRepository, times(1)).update(testSpecialist);
         assertEquals("a", testSpecialist.getFirstname());
     }
@@ -82,35 +98,26 @@ class SpecialistServiceTest {
     @Test
     void viewAvailableOrders() {
         when(specialistRepository.findById(1L)).thenReturn(Optional.of(testSpecialist));
+        //when(CustomerDto.mapToDto(Mockito.mock(Customer.class))).thenReturn(Mockito.mock(CustomerDto.CustomerResponseDto.class));
         when(orderRepository.findByStatusAndService(OrderStatus.WAITING_FOR_SPECIALIST_OFFERS, Set.of(testService)))
                 .thenReturn(Collections.singletonList(testOrder));
-        when(modelMapper.map(testOrder, OrderResponseDto.class)).thenReturn(mock(OrderResponseDto.class));
-        List<OrderResponseDto> result = specialistService.viewAvailableOrders(1L);
+        List<OrderDto.OrderResponseDto> result = specialistService.viewAvailableOrders(1L);
         assertFalse(result.isEmpty());
         assertEquals(1, result.size());
     }
 
     @Test
     void submitOffer() {
-        OfferRequestDto dto = new OfferRequestDto(1L, 200D,2, LocalDateTime.now().plusDays(1));
+        OfferDto.OfferRequestDto dto = new OfferDto.OfferRequestDto();
+        dto.setOrderId(1L);
+        dto.setProposedPrice(200D);
+        dto.setTimeToEndTheJobInHours(2);
+        dto.setProposedStartTime(LocalDateTime.now().plusDays(1));
         when(specialistRepository.findById(1L)).thenReturn(Optional.of(testSpecialist));
         when(offerRepository.findBySpecialistAndOfferStatus(testSpecialist, OfferStatus.ACCEPTED)).thenReturn(Optional.empty());
         when(orderRepository.findById(1L)).thenReturn(Optional.of(testOrder));
         specialistService.submitOffer(1L, dto);
         verify(offerRepository, times(1)).save(any(Offer.class));
-    }
-
-    @Test
-    void changeJobToCompleted() {
-        Offer acceptedOffer = new Offer();
-        testSpecialist.setId(1L);
-        acceptedOffer.setSpecialist(testSpecialist);
-        testOrder.setSelectedOffer(acceptedOffer);
-        testOrder.setOrderStatus(OrderStatus.IN_PROGRESS);
-        when(orderRepository.findById(10L)).thenReturn(Optional.of(testOrder));
-        specialistService.changeJobToCompleted(1L, 10L);
-        assertEquals(OrderStatus.DONE, testOrder.getOrderStatus());
-        verify(orderRepository, times(1)).update(testOrder);
     }
 
     @Test

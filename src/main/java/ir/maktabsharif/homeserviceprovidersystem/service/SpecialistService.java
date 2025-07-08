@@ -25,7 +25,6 @@ public class SpecialistService {
     private final SpecialistRepository specialistRepository;
     private final OrderRepository orderRepository;
     private final OfferRepository offerRepository;
-    private final ModelMapper modelMapper;
 
     @Value("${storage.profile-photo-type}")
     private String storageProfilePictureType;
@@ -33,47 +32,62 @@ public class SpecialistService {
 //    @Value("${storage.file.upload-dir}")
 //    private String storageFileUploadDir;
 
-    public SpecialistResponseDto register(SpecialistRegistrationDto dto) throws IOException {
-        MyValidator.validate(dto);
-        if (specialistRepository.findByEmail(dto.email()).isPresent()) {
+    public SpecialistDto.SpecialistResponseDto register(SpecialistDto.SpecialistRequestDto dto) throws IOException {
+        if (specialistRepository.findByEmail(dto.getEmail()).isPresent()) {
             throw new AlreadyExistException("specialist with this email already exist");
         }
         Specialist specialist = new Specialist();
-        specialist.setFirstname(dto.firstname());
-        specialist.setLastname(dto.lastname());
-        specialist.setEmail(dto.email());
-        specialist.setPassword(dto.password());
+        specialist.setFirstname(dto.getFirstName());
+        specialist.setLastname(dto.getLastName());
+        specialist.setEmail(dto.getEmail());
+        specialist.setPassword(dto.getPassword());
         specialist.setAccountStatus(AccountStatus.PENDING_APPROVAL);
         specialist.setSpecialistStatus(SpecialistStatus.FREE);
-        specialist.setProfilePhotoBytes(dto.profilePhotoData().getBytes());
+        if (dto.getProfilePhotoData() != null){
+            specialist.setProfilePhotoBytes(dto.getProfilePhotoData().getBytes());
+        }
         Wallet wallet = new Wallet();
         specialist.setWallet(wallet);
         Specialist savedSpecialist = specialistRepository.save(specialist);
         wallet.setUser(savedSpecialist);
-        return modelMapper.map(savedSpecialist, SpecialistResponseDto.class);
+        return SpecialistDto.mapToDto(savedSpecialist);
     }
 
-    public void updateSpecialist(Long specialistId, UserUpdateDto dto) {
-        MyValidator.validate(dto);
-        Specialist specialist = specialistRepository.findById(specialistId)
+    public void updateSpecialist(SpecialistDto.SpecialistUpdateDto dto) throws IOException {
+        Specialist specialist = specialistRepository.findById(dto.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("specialist with this id does not exist"));
         if (offerRepository.findBySpecialistAndOfferStatus(specialist, OfferStatus.ACCEPTED).isPresent()) {
             throw new IllegalArgumentException("cannot update specialist with an active job");
         }
-        specialist.setFirstname(dto.firstName());
+        setNotNullFilledInSpecialist(specialist, dto);
         specialist.setAccountStatus(AccountStatus.PENDING_APPROVAL);
         specialistRepository.update(specialist);
     }
 
-    public List<OrderResponseDto> viewAvailableOrders(Long specialistId) {
+    private void setNotNullFilledInSpecialist(Specialist specialist, SpecialistDto.SpecialistUpdateDto dto) throws IOException {
+        if (dto.getEmail() != null){
+            if (specialistRepository.findByEmail(dto.getEmail()).isPresent()) {
+                throw new AlreadyExistException("email already exist");
+            }
+            specialist.setEmail(dto.getEmail());
+        }
+        if (dto.getPassword() != null){
+            specialist.setPassword(dto.getPassword());
+        }
+        if (dto.getProfilePhotoData() != null){
+            specialist.setProfilePhotoBytes(dto.getProfilePhotoData().getBytes());
+        }
+    }
+
+    public List<OrderDto.OrderResponseDto> viewAvailableOrders(Long specialistId) {
         Specialist specialist = specialistRepository.findById(specialistId)
                 .orElseThrow(() -> new ResourceNotFoundException("specialist with this id does not exist"));
         return orderRepository.findByStatusAndService(OrderStatus.WAITING_FOR_SPECIALIST_OFFERS, specialist.getSpecialistServices())
-                .stream().map(order -> modelMapper.map(order, OrderResponseDto.class))
+                .stream().map(OrderDto::mapToDto)
                 .toList();
     }
 
-    public OfferResponseDto submitOffer(Long specialistId, OfferRequestDto dto) {
+    public OfferDto.OfferResponseDto submitOffer(Long specialistId, OfferDto.OfferRequestDto dto) {
         Specialist specialist = specialistRepository.findById(specialistId)
                 .orElseThrow(() -> new ResourceNotFoundException("specialist with this id does not exist"));
         if (specialist.getAccountStatus() != AccountStatus.APPROVED) {
@@ -83,30 +97,16 @@ public class SpecialistService {
             || offerRepository.findBySpecialistAndOfferStatus(specialist, OfferStatus.PENDING).isPresent()) {
             throw new NotAllowedException("cannot submit offer while having an active job");
         }
-        Order order = orderRepository.findById(dto.orderId())
+        Order order = orderRepository.findById(dto.getOrderId())
                 .orElseThrow(() -> new ResourceNotFoundException("order with this id does not exist"));
         Offer offer = new Offer();
         offer.setOfferStatus(OfferStatus.PENDING);
         offer.setSpecialist(specialist);
         offer.setOrder(order);
-        offer.setProposedPrice(dto.proposedPrice());
-        offer.setProposedStartTime(dto.proposedStartTime());
-        offer.setTimeToEndTheJobInHours(dto.durationInHours());
-        offerRepository.save(offer);
-        return modelMapper.map(offer, OfferResponseDto.class);
-    }
-
-    public void changeJobToCompleted(Long specialistId, Long orderId) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("order with this id does not exist"));
-        if (order.getSelectedOffer() == null || !order.getSelectedOffer().getSpecialist().getId().equals(specialistId)) {
-            throw new NotAllowedException("cannot change job to completed because specialist is not assigned to this order");
-        }
-        if (order.getOrderStatus() != OrderStatus.IN_PROGRESS){
-            throw new NotAllowedException("order must be in progress");
-        }
-        order.setOrderStatus(OrderStatus.DONE);
-        orderRepository.update(order);
+        offer.setProposedPrice(dto.getProposedPrice());
+        offer.setProposedStartTime(dto.getProposedStartTime());
+        offer.setTimeToEndTheJobInHours(dto.getTimeToEndTheJobInHours());
+        return OfferDto.mapToDto(offerRepository.save(offer));
     }
 
     public Double showWalletBalance(Long specialistId) {

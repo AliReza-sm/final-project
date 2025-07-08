@@ -36,7 +36,7 @@ public class ManagerSeeder implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) throws Exception {
-        if (managerRepository.findById(1L).isEmpty()) {
+        if (managerRepository.findAll().isEmpty()) {
             createDefaultManager();
         }
     }
