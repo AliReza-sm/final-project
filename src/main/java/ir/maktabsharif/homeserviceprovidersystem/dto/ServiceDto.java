@@ -50,6 +50,8 @@ public class ServiceDto {
         serviceResponseDto.setBasePrice(service.getBasePrice());
         if (service.getParentService() != null){
             serviceResponseDto.setParentServiceId(service.getParentService().getId());
+        }else {
+            serviceResponseDto.setParentServiceId(null);
         }
         return serviceResponseDto;
     }

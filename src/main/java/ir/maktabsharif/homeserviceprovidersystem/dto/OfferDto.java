@@ -21,14 +21,15 @@ public class OfferDto {
 
     @Data
     public static class OfferRequestDto {
-        @NotNull
+        @NotNull(message = "Order ID cannot be null")
         private Long orderId;
-        @NotNull
+        @NotNull(message = "Proposed price cannot be null")
         @Positive
         private Double proposedPrice;
-        @NotNull
+        @NotNull(message = "Time to end the job cannot be null")
+        @Positive
         private Integer TimeToEndTheJobInHours;
-        @NotNull
+        @NotNull(message = "Proposed start time cannot be null")
         @Future
         private LocalDateTime proposedStartTime;
     }
