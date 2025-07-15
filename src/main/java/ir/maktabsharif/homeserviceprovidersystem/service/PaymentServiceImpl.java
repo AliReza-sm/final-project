@@ -80,36 +80,3 @@ public class PaymentServiceImpl implements PaymentService {
         walletRepository.save(customerWallet);
     }
 }
-
-
-
-
-//        Offer acceptedOffer = order.getSelectedOffer();
-//        if (acceptedOffer == null) {
-//            throw new NotAllowedException("No offer has been selected for this order.");
-//        }
-//        if (order.getWorkCompletedDate() == null) {
-//            throw new NotAllowedException("Order completion time is null");
-//        }
-//
-//        long delayInHours = Duration.between(acceptedOffer.getProposedStartTime(), order.getWorkCompletedDate()).toHours();
-//        Specialist specialist = acceptedOffer.getSpecialist();
-//        if (delayInHours > 0) {
-//            specialist.setSumScore(specialist.getSumScore() - delayInHours);
-//            if (specialist.getSumScore() < 0) specialist.setSumScore(0.0);
-//            if (specialist.getNumberOfReviews() > 0) {
-//                specialist.setAverageScore(specialist.getSumScore() / specialist.getNumberOfReviews());
-//            } else {
-//                specialist.setAverageScore(0.0);
-//            }
-//            specialist.setSpecialistStatus(SpecialistStatus.INACTIVE);
-//            specialistRepository.save(specialist);
-//        }
-
-//        Wallet specialistWallet = specialist.getWallet();
-//        customerWallet.setBalance(customerWallet.getBalance() - amount);
-//        specialistWallet.setBalance(specialistWallet.getBalance() + (amount * 0.7));
-
-//        walletRepository.save(specialistWallet);
-//        order.setOrderStatus(OrderStatus.PAID);
-//        orderRepository.save(order);

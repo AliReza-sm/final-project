@@ -12,6 +12,5 @@ public interface PaymentRepository extends BaseRepository<Payment, Long> {
 
     @Query(value = "select p from Payment p where p.customer.id = ?1")
     Optional<Payment> findByCustomerId(Long customerId);
-    Optional<Payment> findPaymentByCustomer (Customer customer);
 
 }
