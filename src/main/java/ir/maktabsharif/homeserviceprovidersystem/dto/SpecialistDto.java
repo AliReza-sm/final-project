@@ -1,6 +1,7 @@
 package ir.maktabsharif.homeserviceprovidersystem.dto;
 
 import ir.maktabsharif.homeserviceprovidersystem.entity.AccountStatus;
+import ir.maktabsharif.homeserviceprovidersystem.entity.OrderStatus;
 import ir.maktabsharif.homeserviceprovidersystem.entity.Specialist;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotNull;
@@ -53,12 +54,21 @@ public class SpecialistDto {
 
     @Data
     public static class SpecialistUpdateDto{
-        private Long id;
         private String email;
         private String password;
         private MultipartFile profilePhotoData;
         @Max(value = 300000, message = "file must be at most 300KB")
         private Long fileSize;
+    }
+
+    @Data
+    public static class SpecialistOrderHistoryDto {
+        private Long orderId;
+        private String serviceName;
+        private OrderStatus orderStatus;
+        private LocalDateTime orderCreatedDate;
+        private Double yourProposedPrice;
+        private Integer yourRatingForOrder;
     }
 
     public static SpecialistResponseDto mapToDto(Specialist specialist){

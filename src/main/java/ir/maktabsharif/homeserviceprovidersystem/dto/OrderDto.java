@@ -28,16 +28,16 @@ public class OrderDto {
 
     @Data
     public static class OrderRequestDto {
-        @NotNull
+        @NotNull(message = "Service ID cannot be null")
         private Long serviceId;
-        @NotNull
-        @Positive
+        @NotNull(message = "Proposed price cannot be null")
+        @Positive(message = "Proposed price must be positive")
         private Double proposedPrice;
         private String description;
-        @NotBlank
+        @NotBlank(message = "Address cannot be blank")
         private String address;
-        @NotNull
-        @Future
+        @NotNull(message = "Proposed start date cannot be null")
+        @Future(message = "Proposed start date must be in the future")
         private LocalDateTime proposedStartDate;
     }
 

@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -40,11 +41,14 @@ public class Order extends BaseEntity<Long> {
     @Column
     private LocalDateTime orderCreatedDate;
 
+    @Column
+    private LocalDateTime workCompletedDate;
+
     @Enumerated(EnumType.STRING)
     private OrderStatus orderStatus;
 
     @OneToMany(mappedBy = "order")
-    private List<Offer> offers;
+    private List<Offer> offers = new ArrayList<>();
 
     @OneToOne
     private Offer selectedOffer;

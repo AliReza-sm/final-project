@@ -1,5 +1,5 @@
 package ir.maktabsharif.homeserviceprovidersystem.entity;
 
 public enum SpecialistStatus {
-    FREE, BUSY
+    ACTIVE, INACTIVE
 }
