@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Payment Gateway</title>
+    <link rel="stylesheet" href="css/payment.css">
+</head>
+<body>
+<div id="payment-main">
+    <div class="payment-header">
+        <h1>Complete Your Payment</h1>
+        <p>Please enter your payment details below.</p>
+    </div>
+    <div class="timer-box">
+        <p>Time remaining to complete payment:</p>
+        <div id="timer">--:--</div>
+    </div>
+
+    <form id="payment-form">
+        <div class="form-group">
+            <label for="amount">Amount</label>
+            <input type="number" id="amount" name="amount" class="form-input" placeholder="Enter amount to pay"
+                   required inputmode="numeric">
+        </div>
+
+        <div class="form-group">
+            <label for="card-number">Card Number</label>
+            <input type="text" id="card-number" name="card-number" class="form-input" placeholder="0000 0000 0000 0000"
+                   required inputmode="numeric">
+        </div>
+
+        <div class="form-group">
+            <label for="password">password</label>
+            <input type="text" id="password" name="password" class="form-input" placeholder="0000"
+                   required inputmode="numeric">
+        </div>
+
+        <div class="form-row">
+            <div>
+                <label for="expiry-date">Expiration Date</label>
+                <input type="text" id="expiry-date" name="expiry-date" class="form-input" placeholder="MM / YY" required
+                       inputmode="numeric">
+            </div>
+            <div>
+                <label for="cvv">CVV2</label>
+                <input type="text" id="cvv" name="cvv" class="form-input" placeholder="123" required inputmode="numeric">
+            </div>
+        </div>
+
+        <div class="captcha-container">
+            <label for="captcha-input">Enter the text below</label>
+            <div class="captcha-body">
+                <div id="captcha-display" class="captcha-text">
+                    LOADING...
+                </div>
+                <button type="button" id="refresh-captcha" title="Get new CAPTCHA">
+                    <img src="https://www.svgrepo.com/show/509209/reload.svg" alt="reload">
+                </button>
+            </div>
+            <input type="text" id="captcha-input" name="captcha-input" class="form-input" required>
+        </div>
+
+        <button type="submit" id="submit-button">
+            Pay Now
+        </button>
+    </form>
+</div>
+
+<script src="js/payment.js" defer></script>
+</body>
+</html>

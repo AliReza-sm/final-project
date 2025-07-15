@@ -1,0 +1,129 @@
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: grey;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 15px;
+    box-sizing: border-box;
+}
+
+#payment-main {
+    width: 100%;
+    max-width: 450px;
+    background-color: white;
+    padding: 25px;
+}
+
+.payment-header {
+    text-align: center;
+}
+
+.payment-header h1 {
+    font-size: 25px;
+    font-weight: 600;
+    color: black;
+}
+
+.timer-box {
+    background-color: lightcyan;
+    color: limegreen;
+    padding: 15px;
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.timer-box p {
+    font-weight: 600;
+}
+
+#timer {
+    font-size: 30px;
+    font-weight: 600;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 15px;
+    font-weight: 500;
+    color: black;
+    margin-bottom: 5px;
+}
+
+.form-input {
+    width: 100%;
+    padding: 10px 15px;
+    box-sizing: border-box;
+}
+
+.form-row {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.captcha-container {
+    margin-bottom: 25px;
+}
+
+.captcha-body {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+#captcha-display {
+    letter-spacing: 5px;
+    text-decoration: line-through;
+    text-decoration-color: grey;
+    text-decoration-thickness: 2px;
+    font-size: 25px;
+    font-weight: 600;
+    background-color:darkgrey;
+    padding: 10px 20px;
+    border-radius: 0.5rem;
+}
+
+#refresh-captcha {
+    padding: 0.5rem;
+    color: #4b5563;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+#refresh-captcha img {
+    width: 20px;
+    height: 20px;
+}
+
+#captcha-input {
+    margin-top: 10px;
+}
+
+#submit-button {
+    width: 100%;
+    background-color: blue;
+    color: white;
+    font-weight: 600;
+    padding: 15px 0;
+    border-radius: 10px;
+    border: none;
+}
+
+#submit-button:hover {
+    background-color: cornflowerblue;
+}
+
+#submit-button:disabled {
+    background-color: grey;
+    cursor: not-allowed;
+}
+
