@@ -1,7 +1,7 @@
 package ir.maktabsharif.homeserviceprovidersystem.controller;
 
 import ir.maktabsharif.homeserviceprovidersystem.dto.UserDto;
-import ir.maktabsharif.homeserviceprovidersystem.service.LoginService;
+import ir.maktabsharif.homeserviceprovidersystem.service.LoginServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 public class LoginController {
 
-    private final LoginService loginService;
+    private final LoginServiceImpl loginService;
 
     @PostMapping
     public ResponseEntity<UserDto.LoginResponseDto> login (@RequestBody UserDto.LoginRequestDto loginRequestDto) {

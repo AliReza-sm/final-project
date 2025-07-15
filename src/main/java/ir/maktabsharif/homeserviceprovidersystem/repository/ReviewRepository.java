@@ -3,8 +3,11 @@ package ir.maktabsharif.homeserviceprovidersystem.repository;
 import ir.maktabsharif.homeserviceprovidersystem.entity.Review;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
 
-public interface ReviewRepository extends CrudRepository<Review, Long> {
+@Repository
+public interface ReviewRepository extends BaseRepository<Review, Long> {
 
+    Optional<Review> findByOrderId(Long orderId);
 
 }

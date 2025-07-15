@@ -1,6 +1,7 @@
 package ir.maktabsharif.homeserviceprovidersystem.config;
 
 import ir.maktabsharif.homeserviceprovidersystem.entity.Manager;
+import ir.maktabsharif.homeserviceprovidersystem.entity.Role;
 import ir.maktabsharif.homeserviceprovidersystem.entity.Wallet;
 import ir.maktabsharif.homeserviceprovidersystem.repository.ManagerRepository;
 import jakarta.validation.Valid;
@@ -47,6 +48,7 @@ public class ManagerSeeder implements CommandLineRunner {
         manager.setLastname(defaultLastname);
         manager.setEmail(defaultEmail);
         manager.setPassword(defaultPassword);
+        manager.setRole(Role.MANAGER);
         Wallet wallet = new Wallet();
         wallet.setUser(manager);
         manager.setWallet(wallet);
