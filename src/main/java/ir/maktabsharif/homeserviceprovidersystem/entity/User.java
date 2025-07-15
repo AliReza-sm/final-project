@@ -43,6 +43,10 @@ public class User extends BaseEntity<Long>{
     @Column
     private LocalDateTime registrationDate;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role;
+
     @PrePersist
     public void prePersist(){
         registrationDate = LocalDateTime.now();
