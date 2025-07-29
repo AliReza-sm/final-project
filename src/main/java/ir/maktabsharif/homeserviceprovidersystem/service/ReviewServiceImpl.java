@@ -8,26 +8,35 @@ import ir.maktabsharif.homeserviceprovidersystem.entity.Review;
 import ir.maktabsharif.homeserviceprovidersystem.entity.Specialist;
 import ir.maktabsharif.homeserviceprovidersystem.exception.NotAllowedException;
 import ir.maktabsharif.homeserviceprovidersystem.exception.ResourceNotFoundException;
-import ir.maktabsharif.homeserviceprovidersystem.repository.OrderRepository;
 import ir.maktabsharif.homeserviceprovidersystem.repository.ReviewRepository;
-import ir.maktabsharif.homeserviceprovidersystem.repository.SpecialistRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @org.springframework.stereotype.Service
 @Transactional
-@RequiredArgsConstructor
-
-public class ReviewServiceImpl implements ReviewService{
+public class ReviewServiceImpl extends BaseServiceImpl<Review, Long> implements ReviewService{
 
     private final ReviewRepository reviewRepository;
-    private final OrderRepository orderRepository;
-    private final SpecialistRepository specialistRepository;
+    private final OrderService orderService;
+    private final SpecialistService specialistService;
+
+    public ReviewServiceImpl(ReviewRepository reviewRepository, OrderService orderService, SpecialistService specialistService) {
+        super(reviewRepository);
+        this.reviewRepository = reviewRepository;
+        this.orderService = orderService;
+        this.specialistService = specialistService;
+    }
 
 
     @Override
+    public Optional<Review> findByOrderId(Long orderId) {
+        return reviewRepository.findByOrderId(orderId);
+    }
+
+    @Override
     public ReviewDto.ReviewResponseDto leaveReview(Long orderId, ReviewDto.ReviewRequestDto requestDto, Long customerId) {
-        Order order = orderRepository.findById(orderId)
+        Order order = orderService.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with ID: " + orderId));
 
         if (!order.getCustomer().getId().equals(customerId)) {
@@ -35,6 +44,9 @@ public class ReviewServiceImpl implements ReviewService{
         }
         if (order.getOrderStatus() != OrderStatus.PAID) {
             throw new NotAllowedException("Order is not paid yet for this order.");
+        }
+        if (reviewRepository.findByOrderId(orderId).isPresent()) {
+            throw new NotAllowedException("Order already have a review");
         }
 
         Review review = ReviewDto.mapToEntity(requestDto);
@@ -53,7 +65,7 @@ public class ReviewServiceImpl implements ReviewService{
         specialist.setNumberOfReviews(specialist.getNumberOfReviews() + 1);
         double average = specialist.getSumScore() / specialist.getNumberOfReviews();
         specialist.setAverageScore(average);
-        specialistRepository.save(specialist);
+        specialistService.save(specialist);
     }
 
     @Override

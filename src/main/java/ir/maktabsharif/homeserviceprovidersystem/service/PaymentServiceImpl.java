@@ -6,7 +6,9 @@ import ir.maktabsharif.homeserviceprovidersystem.entity.*;
 import ir.maktabsharif.homeserviceprovidersystem.exception.NotAllowedException;
 import ir.maktabsharif.homeserviceprovidersystem.exception.ResourceNotFoundException;
 import ir.maktabsharif.homeserviceprovidersystem.repository.*;
-import lombok.RequiredArgsConstructor;
+
+import java.net.MalformedURLException;
+import java.net.URL;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -14,17 +16,23 @@ import java.util.UUID;
 
 @org.springframework.stereotype.Service
 @Transactional
-@RequiredArgsConstructor
-public class PaymentServiceImpl implements PaymentService {
+public class PaymentServiceImpl extends BaseServiceImpl<Payment, Long> implements PaymentService {
 
-    private final CustomerRepository customerRepository;
-    private final WalletRepository walletRepository;
-    private final TransactionRepository transactionRepository;
     private final PaymentRepository paymentRepository;
+    private final CustomerService customerService;
+    private final WalletService walletService;
+
+    public PaymentServiceImpl(PaymentRepository paymentRepository, CustomerService customerService,
+                              WalletService walletService) {
+        super(paymentRepository);
+        this.paymentRepository = paymentRepository;
+        this.customerService = customerService;
+        this.walletService = walletService;
+    }
 
     @Override
     public PaymentDto.paymentStartDto startPayment(Long customerId) {
-        Customer customer = customerRepository.findById(customerId)
+        Customer customer = customerService.findById(customerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found"));
 
         Payment payment = paymentRepository.findByCustomerId(customerId)
@@ -61,22 +69,14 @@ public class PaymentServiceImpl implements PaymentService {
             throw new NotAllowedException("Payment amount must be a positive value.");
         }
 
-        Customer customer = customerRepository.findById(request.getCustomerId())
+        Customer customer = customerService.findById(request.getCustomerId())
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found"));
-        pay(customer, request.getAmount());
+        walletService.depositToWallet(customer.getEmail(), request.getAmount());
         paymentRepository.delete(payment);
     }
 
-    private void pay(Customer customer, Double amount) {
-
-        Wallet customerWallet = customer.getWallet();
-        customerWallet.setBalance(customerWallet.getBalance() + amount);
-        Transaction transaction = new Transaction();
-        transaction.setWallet(customerWallet);
-        transaction.setAmount(amount);
-        transaction.setType(TransactionType.DEPOSIT);
-        transaction.setDescription("Deposit to customer wallet with id: " + customer.getId());
-        transactionRepository.save(transaction);
-        walletRepository.save(customerWallet);
+    @Override
+    public URL getPaymentPage (Long customerId) throws MalformedURLException {
+        return new URL("http://localhost:8081/payment.html?customerId="+customerId);
     }
 }

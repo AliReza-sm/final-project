@@ -4,10 +4,12 @@ import ir.maktabsharif.homeserviceprovidersystem.entity.*;
 import ir.maktabsharif.homeserviceprovidersystem.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -19,147 +21,136 @@ public class DataSeeder implements CommandLineRunner {
     private final OrderRepository orderRepository;
     private final OfferRepository offerRepository;
     private final ReviewRepository reviewRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
     public void run(String... args) throws Exception {
 
-        Customer customer1 = new Customer();
-        customer1.setFirstname("Alice");
-        customer1.setLastname("Smith");
-        customer1.setEmail("alice@email.com");
-        customer1.setPassword("password123");
-        customer1.setRole(Role.CUSTOMER);
-        customer1.setWallet(new Wallet());
-        customer1.getWallet().setUser(customer1);
-        customer1.getWallet().setBalance(500.00);
+        if (customerRepository.count() != 0) {
+            return;
+        }
+        Customer customer1 = createCustomer("Alice", "Smith", "alice@customer.com", "password123", 500.0);
+        Customer customer2 = createCustomer("Bob", "Johnson", "bob@customer.com", "password123", 150.0);
 
-        Customer customer2 = new Customer();
-        customer2.setFirstname("Bob");
-        customer2.setLastname("Johnson");
-        customer2.setEmail("bob@email.com");
-        customer2.setPassword("password123");
-        customer2.setRole(Role.CUSTOMER);
-        customer2.setWallet(new Wallet());
-        customer2.getWallet().setUser(customer2);
+        Specialist specialist1 = createSpecialist("Charlie", "Brown", "charlie@specialist.com", "password123", AccountStatus.APPROVED);
+        Specialist specialist2 = createSpecialist("Diana", "Prince", "diana@specialist.com", "password123", AccountStatus.APPROVED);
+        Specialist specialist3 = createSpecialist("Peter", "Parker", "peter@specialist.com", "password123", AccountStatus.PENDING_APPROVAL);
 
-        customerRepository.save(customer1);
-        customerRepository.save(customer2);
+        Service homeCleaning = createService("Home Cleaning", "General", 50.0, null);
+        Service plumbing = createService("Plumbing", "General", 80.0, null);
+        Service gardening = createService("Gardening", "General", 40.0, null);
+        Service applianceRepair = createService("Appliance Repair", "General", 70.0, null);
 
-        Specialist specialist1 = new Specialist();
-        specialist1.setFirstname("Charlie");
-        specialist1.setLastname("Brown");
-        specialist1.setEmail("charlie@specialist.com");
-        specialist1.setPassword("password123");
-        specialist1.setAccountStatus(AccountStatus.APPROVED);
-        specialist1.setRole(Role.SPECIALIST);
-        specialist1.setWallet(new Wallet());
-        specialist1.getWallet().setUser(specialist1);
+        Service kitchenCleaning = createService("Kitchen Cleaning", "General", 75.0, homeCleaning);
+        Service leakRepair = createService("Leak Repair", "General", 90.0, plumbing);
+        Service lawnMowing = createService("Lawn Mowing", "General", 45.0, gardening);
+        Service fridgeRepair = createService("Refrigerator Repair", "General", 100.0, applianceRepair);
 
-        Specialist specialist2 = new Specialist();
-        specialist2.setFirstname("Diana");
-        specialist2.setLastname("Prince");
-        specialist2.setEmail("diana@specialist.com");
-        specialist2.setPassword("password123");
-        specialist2.setAccountStatus(AccountStatus.APPROVED);
-        specialist2.setRole(Role.SPECIALIST);
-        specialist2.setWallet(new Wallet());
-        specialist2.getWallet().setUser(specialist2);
+        specialist1.getSpecialistServices().addAll(List.of(kitchenCleaning, leakRepair, lawnMowing));
+        specialist2.getSpecialistServices().addAll(List.of(leakRepair, fridgeRepair));
+        specialistRepository.saveAll(List.of(specialist1, specialist2));
 
-        Specialist specialist3 = new Specialist();
-        specialist3.setFirstname("Peter");
-        specialist3.setLastname("Parker");
-        specialist3.setEmail("peter@specialist.com");
-        specialist3.setPassword("password123");
-        specialist3.setAccountStatus(AccountStatus.PENDING_APPROVAL);
-        specialist3.setRole(Role.SPECIALIST);
-        specialist3.setWallet(new Wallet());
-        specialist3.getWallet().setUser(specialist3);
-
-        specialistRepository.save(specialist1);
-        specialistRepository.save(specialist2);
-        specialistRepository.save(specialist3);
-
-        Service mainService1 = new Service();
-        mainService1.setName("Home Cleaning");
-        mainService1.setDescription("General cleaning services for your home.");
-        mainService1.setBasePrice(50.0);
-
-        Service mainService2 = new Service();
-        mainService2.setName("Plumbing");
-        mainService2.setDescription("Fixing leaks and other plumbing issues.");
-        mainService2.setBasePrice(80.0);
-
-        serviceRepository.save(mainService1);
-        serviceRepository.save(mainService2);
-
-        Service subService1 = new Service();
-        subService1.setName("Kitchen Cleaning");
-        subService1.setBasePrice(75.0);
-        subService1.setParentService(mainService1);
-        mainService1.getSubServices().add(subService1);
-
-        Service subService2 = new Service();
-        subService2.setName("Leak Repair");
-        subService2.setBasePrice(90.0);
-        subService2.setParentService(mainService2);
-        mainService2.getSubServices().add(subService2);
-
-        serviceRepository.save(subService1);
-        serviceRepository.save(subService2);
-
-        specialist1.getSpecialistServices().add(subService1);
-        specialist2.getSpecialistServices().add(subService2);
-        specialist1.getSpecialistServices().add(subService2);
-
-        specialistRepository.save(specialist1);
-        specialistRepository.save(specialist2);
-
-        Order order1 = new Order();
-        order1.setCustomer(customer1);
-        order1.setService(subService2);
-        order1.setProposedPrice(100.0);
-        order1.setDescription("aaaa");
-        order1.setAddress("sa");
-        order1.setProposedStartDate(LocalDateTime.now().plusDays(2));
-        order1.setOrderStatus(OrderStatus.WAITING_FOR_SPECIALIST_OFFERS);
-        orderRepository.save(order1);
-
-
-        Order order2 = new Order();
-        order2.setCustomer(customer2);
-        order2.setService(subService1);
-        order2.setProposedPrice(80.0);
-        order2.setDescription("ds");
-        order2.setAddress("gd");
-        order2.setProposedStartDate(LocalDateTime.now().minusDays(5));
-        order2.setOrderStatus(OrderStatus.DONE);
-        order2.setWorkCompletedDate(LocalDateTime.now().minusDays(4));
+        Order order1 = createOrder(customer1, lawnMowing, 50.0, "All", "eram", LocalDateTime.now().plusDays(3), OrderStatus.WAITING_FOR_SPECIALIST_OFFERS);
+        Order order2 = createOrder(customer2, leakRepair, 120.0, "All", "eram", LocalDateTime.now().plusDays(1), OrderStatus.WAITING_FOR_OFFER_SELECTION);
+        Offer offer2_1 = createOffer(specialist1, order2, 130.0, 2, order2.getProposedStartDate().plusHours(1), OfferStatus.PENDING);
+        Offer offer2_2 = createOffer(specialist2, order2, 125.0, 3, order2.getProposedStartDate().plusHours(2), OfferStatus.PENDING);
+        order2.getOffers().addAll(List.of(offer2_1, offer2_2));
         orderRepository.save(order2);
+        Order order3 = createOrder(customer1, fridgeRepair, 110.0, "All", "eram", LocalDateTime.now().plusHours(4), OrderStatus.WAITING_FOR_SPECIALIST_TO_ARRIVE);
+        Offer offer3_1 = createOffer(specialist2, order3, 110.0, 4, order3.getProposedStartDate(), OfferStatus.ACCEPTED);
+        order3.setSelectedOffer(offer3_1);
+        orderRepository.save(order3);
 
-        Offer offer2 = new Offer();
-        offer2.setSpecialist(specialist1);
-        offer2.setOrder(order2);
-        offer2.setProposedPrice(80.0);
-        offer2.setTimeToEndTheJobInHours(3);
-        offer2.setProposedStartTime(order2.getProposedStartDate());
-        offer2.setOfferStatus(OfferStatus.ACCEPTED);
-        offerRepository.save(offer2);
-        order2.setSelectedOffer(offer2);
-        orderRepository.save(order2);
-
-        Review review = new Review();
-        review.setCustomer(customer2);
-        review.setSpecialist(specialist1);
-        review.setOrder(order2);
-        review.setRating(5);
-        review.setComment("fine");
-        reviewRepository.save(review);
-
+        Order order4 = createOrder(customer2, kitchenCleaning, 80.0, "All", "eram", LocalDateTime.now().minusDays(5), OrderStatus.PAID);
+        order4.setWorkCompletedDate(LocalDateTime.now().minusDays(4));
+        Offer offer4_1 = createOffer(specialist1, order4, 85.0, 3, order4.getProposedStartDate(), OfferStatus.ACCEPTED);
+        order4.setSelectedOffer(offer4_1);
+        orderRepository.save(order4);
+        Review review4 = createReview(customer2, specialist1, order4, 5, "Good job");
         specialist1.setSumScore(5.0);
         specialist1.setNumberOfReviews(1);
         specialist1.setAverageScore(5.0);
         specialistRepository.save(specialist1);
 
+        Order order5 = createOrder(customer1, leakRepair, 150.0, "All", "eram", LocalDateTime.now().minusHours(2), OrderStatus.DONE);
+        order5.setWorkCompletedDate(null);
+        Offer offer5_1 = createOffer(specialist2, order5, 150.0, 2, order5.getProposedStartDate(), OfferStatus.ACCEPTED);
+        order5.setSelectedOffer(offer5_1);
+        orderRepository.save(order5);
+    }
+
+    private Customer createCustomer(String firstname, String lastname, String email, String password, double balance) {
+        Customer c = new Customer();
+        c.setFirstname(firstname);
+        c.setLastname(lastname);
+        c.setEmail(email);
+        c.setPassword(passwordEncoder.encode(password));
+        c.setRole(Role.CUSTOMER);
+        c.setEnabled(true);
+        Wallet wallet = new Wallet();
+        wallet.setBalance(balance);
+        wallet.setUser(c);
+        c.setWallet(wallet);
+        return customerRepository.save(c);
+    }
+
+    private Specialist createSpecialist(String firstname, String lastname, String email, String password, AccountStatus status) {
+        Specialist s = new Specialist();
+        s.setFirstname(firstname);
+        s.setLastname(lastname);
+        s.setEmail(email);
+        s.setPassword(passwordEncoder.encode(password));
+        s.setRole(Role.SPECIALIST);
+        s.setEnabled(true);
+        s.setAccountStatus(status);
+        Wallet wallet = new Wallet();
+        wallet.setUser(s);
+        s.setWallet(wallet);
+        return specialistRepository.save(s);
+    }
+
+    private Service createService(String name, String desc, double price, Service parent) {
+        Service s = new Service();
+        s.setName(name);
+        s.setDescription(desc);
+        s.setBasePrice(price);
+        if (parent != null) {
+            s.setParentService(parent);
+        }
+        return serviceRepository.save(s);
+    }
+
+    private Order createOrder(Customer customer, Service service, double price, String desc, String address, LocalDateTime date, OrderStatus status) {
+        Order o = new Order();
+        o.setCustomer(customer);
+        o.setService(service);
+        o.setProposedPrice(price);
+        o.setDescription(desc);
+        o.setAddress(address);
+        o.setProposedStartDate(date);
+        o.setOrderStatus(status);
+        return orderRepository.save(o);
+    }
+
+    private Offer createOffer(Specialist specialist, Order order, double price, int hours, LocalDateTime date, OfferStatus status) {
+        Offer offer = new Offer();
+        offer.setSpecialist(specialist);
+        offer.setOrder(order);
+        offer.setProposedPrice(price);
+        offer.setTimeToEndTheJobInHours(hours);
+        offer.setProposedStartTime(date);
+        offer.setOfferStatus(status);
+        return offerRepository.save(offer);
+    }
+
+    private Review createReview(Customer customer, Specialist specialist, Order order, int rating, String comment) {
+        Review r = new Review();
+        r.setCustomer(customer);
+        r.setSpecialist(specialist);
+        r.setOrder(order);
+        r.setRating(rating);
+        r.setComment(comment);
+        return reviewRepository.save(r);
     }
 }

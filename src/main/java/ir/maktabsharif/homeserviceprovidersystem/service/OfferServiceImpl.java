@@ -5,9 +5,7 @@ import ir.maktabsharif.homeserviceprovidersystem.entity.*;
 import ir.maktabsharif.homeserviceprovidersystem.exception.NotAllowedException;
 import ir.maktabsharif.homeserviceprovidersystem.exception.ResourceNotFoundException;
 import ir.maktabsharif.homeserviceprovidersystem.repository.OfferRepository;
-import ir.maktabsharif.homeserviceprovidersystem.repository.OrderRepository;
-import ir.maktabsharif.homeserviceprovidersystem.repository.SpecialistRepository;
-import lombok.RequiredArgsConstructor;
+import ir.maktabsharif.homeserviceprovidersystem.service.Helper.SpecialistHelperService;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Comparator;
@@ -16,18 +14,23 @@ import java.util.stream.Collectors;
 
 @org.springframework.stereotype.Service
 @Transactional
-@RequiredArgsConstructor
-
-public class OfferServiceImpl implements OfferService{
+public class OfferServiceImpl extends BaseServiceImpl<Offer, Long> implements OfferService {
 
     private final OfferRepository offerRepository;
-    private final SpecialistRepository specialistRepository;
-    private final OrderRepository orderRepository;
+    private final SpecialistHelperService specialistHelperService;
+    private final OrderService orderService;
 
+    public OfferServiceImpl(OfferRepository offerRepository, SpecialistHelperService specialistHelperService,
+                            OrderService orderService) {
+        super(offerRepository);
+        this.offerRepository = offerRepository;
+        this.specialistHelperService = specialistHelperService;
+        this.orderService = orderService;
+    }
 
     @Override
     public OfferDto.OfferResponseDto submitOffer(OfferDto.OfferRequestDto requestDto, Long specialistId) {
-        Specialist specialist = specialistRepository.findById(specialistId)
+        Specialist specialist = specialistHelperService.findById(specialistId)
                 .orElseThrow(() -> new ResourceNotFoundException("Specialist not found with id: " + specialistId));
 
         if (specialist.getAccountStatus() != AccountStatus.APPROVED) {
@@ -38,9 +41,15 @@ public class OfferServiceImpl implements OfferService{
             throw new NotAllowedException("Cannot submit a new offer while you have an active job.");
         }
 
-        Order order = orderRepository.findById(requestDto.getOrderId())
+        Order order = orderService.findById(requestDto.getOrderId())
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with ID: " + requestDto.getOrderId()));
 
+        if (order.getOrderStatus() == OrderStatus.WAITING_FOR_SPECIALIST_TO_ARRIVE
+            || order.getOrderStatus() == OrderStatus.PAID
+            || order.getOrderStatus() == OrderStatus.DONE
+            || order.getOrderStatus() == OrderStatus.WORK_STARTED) {
+            throw new NotAllowedException("Order specialist selected so no more offer can be submitted");
+        }
         if (requestDto.getProposedPrice() < order.getProposedPrice()) {
             throw new NotAllowedException("Offer price cannot be less than the customers proposed price.");
         }
@@ -54,7 +63,7 @@ public class OfferServiceImpl implements OfferService{
         offer.setOfferStatus(OfferStatus.PENDING);
 
         order.setOrderStatus(OrderStatus.WAITING_FOR_OFFER_SELECTION);
-        orderRepository.save(order);
+        orderService.save(order);
 
         Offer savedOffer = offerRepository.save(offer);
         return OfferDto.mapToDto(savedOffer);
@@ -62,7 +71,7 @@ public class OfferServiceImpl implements OfferService{
 
     @Override
     public void selectOffer(Long orderId, Long offerId, Long customerId) {
-        Order order = orderRepository.findById(orderId)
+        Order order = orderService.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with ID: " + orderId));
 
         if (!order.getCustomer().getId().equals(customerId)) {
@@ -88,12 +97,12 @@ public class OfferServiceImpl implements OfferService{
                 offer.setOfferStatus(OfferStatus.REJECTED);
             }
         });
-        orderRepository.save(order);
+        orderService.save(order);
     }
 
     @Override
     public List<OfferDto.OfferResponseDto> getOffersForOrder(Long orderId, Long customerId, String sortBy) {
-        Order order = orderRepository.findById(orderId)
+        Order order = orderService.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with ID: " + orderId));
 
         if (!order.getCustomer().getId().equals(customerId)) {

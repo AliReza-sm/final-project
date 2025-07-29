@@ -1,45 +1,56 @@
 package ir.maktabsharif.homeserviceprovidersystem.service;
 
-import ir.maktabsharif.homeserviceprovidersystem.dto.TransactionDto;
 import ir.maktabsharif.homeserviceprovidersystem.dto.WalletDto;
+import ir.maktabsharif.homeserviceprovidersystem.entity.TransactionType;
 import ir.maktabsharif.homeserviceprovidersystem.entity.User;
+import ir.maktabsharif.homeserviceprovidersystem.entity.Wallet;
 import ir.maktabsharif.homeserviceprovidersystem.exception.ResourceNotFoundException;
-import ir.maktabsharif.homeserviceprovidersystem.repository.TransactionRepository;
-import ir.maktabsharif.homeserviceprovidersystem.repository.UserRepository;
 import ir.maktabsharif.homeserviceprovidersystem.repository.WalletRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 @Service
 @Transactional
-@RequiredArgsConstructor
-
-public class WalletServiceImpl implements WalletService{
+public class WalletServiceImpl extends BaseServiceImpl<Wallet, Long> implements WalletService{
 
     private final WalletRepository walletRepository;
-    private final UserRepository<User> userRepository;
-    private final TransactionRepository transactionRepository;
+    private final UserService userService;
+    private final TransactionService transactionService;
+
+    public WalletServiceImpl(WalletRepository walletRepository, UserService userService, TransactionService transactionService) {
+        super(walletRepository);
+        this.walletRepository = walletRepository;
+        this.userService = userService;
+        this.transactionService = transactionService;
+    }
 
     @Override
     public WalletDto.WalletResponseDto findWalletByOwnerEmail(String email) {
-        User user = userRepository.findByEmail(email)
+        User user = userService.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
         return WalletDto.mapToDto(user.getWallet());
     }
 
+    @Override
+    public void depositToWallet(String email, Double amount) {
+        User user = userService.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
+        user.getWallet().setBalance(user.getWallet().getBalance()+amount);
+        transactionService.create(email, amount, TransactionType.DEPOSIT);
+        userService.save(user);
+        walletRepository.save(user.getWallet());
+        WalletDto.mapToDto(user.getWallet());
+    }
 
     @Override
-    public List<TransactionDto.TransactionResponseDto> getWalletHistory(String email) {
-        User user = userRepository.findByEmail(email)
+    public WalletDto.WalletResponseDto withdrawFromWallet(String email, Double amount) {
+        User user = userService.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
-        return transactionRepository.findByWalletId(user.getWallet().getId())
-                .stream()
-                .map(TransactionDto::mapToDto)
-                .collect(Collectors.toList());
+        user.getWallet().setBalance(user.getWallet().getBalance()-amount);
+        transactionService.create(email, amount, TransactionType.WITHDRAW);
+        userService.save(user);
+        walletRepository.save(user.getWallet());
+        return WalletDto.mapToDto(user.getWallet());
     }
 
     @Override

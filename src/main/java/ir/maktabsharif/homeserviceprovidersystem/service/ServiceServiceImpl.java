@@ -1,29 +1,28 @@
 package ir.maktabsharif.homeserviceprovidersystem.service;
 
 import ir.maktabsharif.homeserviceprovidersystem.dto.ServiceDto;
-import ir.maktabsharif.homeserviceprovidersystem.dto.SpecialistDto;
 import ir.maktabsharif.homeserviceprovidersystem.entity.Service;
-import ir.maktabsharif.homeserviceprovidersystem.entity.Specialist;
 import ir.maktabsharif.homeserviceprovidersystem.exception.AlreadyExistException;
 import ir.maktabsharif.homeserviceprovidersystem.exception.NotAllowedException;
 import ir.maktabsharif.homeserviceprovidersystem.exception.ResourceNotFoundException;
-import ir.maktabsharif.homeserviceprovidersystem.repository.OrderRepository;
-import ir.maktabsharif.homeserviceprovidersystem.repository.ReviewRepository;
 import ir.maktabsharif.homeserviceprovidersystem.repository.ServiceRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @org.springframework.stereotype.Service
-@RequiredArgsConstructor
 @Transactional
-
-public class ServiceServiceImpl implements ServiceService {
+public class ServiceServiceImpl extends BaseServiceImpl<Service, Long> implements ServiceService {
 
     private final ServiceRepository serviceRepository;
-    private final OrderRepository orderRepository;
+    private final OrderService orderService;
+
+    public ServiceServiceImpl(ServiceRepository serviceRepository, OrderService orderService) {
+        super(serviceRepository);
+        this.serviceRepository = serviceRepository;
+        this.orderService = orderService;
+    }
 
     @Override
     public ServiceDto.ServiceResponseDto createService(ServiceDto.ServiceRequestDto requestDto) {
@@ -71,21 +70,21 @@ public class ServiceServiceImpl implements ServiceService {
         if (!serviceRepository.existsById(serviceId)) {
             throw new ResourceNotFoundException("Service not found with ID: " + serviceId);
         }
-        if (orderRepository.existsByServiceId(serviceId)) {
+        if (orderService.existByServiceId(serviceId)) {
             throw new NotAllowedException("Cannot delete service with ID " + serviceId + " as it has active orders.");
         }
         serviceRepository.deleteById(serviceId);
     }
 
     @Override
-    public ServiceDto.ServiceResponseDto findById(Long serviceId) {
+    public ServiceDto.ServiceResponseDto findServiceById(Long serviceId) {
         Service service = serviceRepository.findById(serviceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Service not found with ID: " + serviceId));
         return ServiceDto.mapToDto(service);
     }
 
     @Override
-    public List<ServiceDto.ServiceResponseDto> findAll() {
+    public List<ServiceDto.ServiceResponseDto> findAllServices() {
         return serviceRepository.findAll().stream()
                 .map(ServiceDto::mapToDto)
                 .collect(Collectors.toList());

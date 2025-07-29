@@ -1,15 +1,13 @@
 package ir.maktabsharif.homeserviceprovidersystem.service;
 
-import ir.maktabsharif.homeserviceprovidersystem.dto.TransactionDto;
 import ir.maktabsharif.homeserviceprovidersystem.dto.WalletDto;
+import ir.maktabsharif.homeserviceprovidersystem.entity.Wallet;
 
-import java.util.List;
-
-public interface WalletService {
+public interface WalletService extends BaseService<Wallet, Long> {
 
     WalletDto.WalletResponseDto findWalletByOwnerEmail(String email);
-//    WalletDto.WalletResponseDto depositToWallet(Double amount, String email);
-    List<TransactionDto.TransactionResponseDto> getWalletHistory(String email);
+    void depositToWallet(String email, Double amount);
+    WalletDto.WalletResponseDto withdrawFromWallet(String email, Double amount);
     Double getWalletBalance(String email);
 
 }
