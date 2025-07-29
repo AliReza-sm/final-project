@@ -62,13 +62,8 @@ public class SpecialistDto {
     }
 
     @Data
-    public static class SpecialistOrderHistoryDto {
-        private Long orderId;
-        private String serviceName;
-        private OrderStatus orderStatus;
-        private LocalDateTime orderCreatedDate;
-        private Double yourProposedPrice;
-        private Integer yourRatingForOrder;
+    public static class SpecialistRating{
+        private double averageScore;
     }
 
     public static SpecialistResponseDto mapToDto(Specialist specialist){

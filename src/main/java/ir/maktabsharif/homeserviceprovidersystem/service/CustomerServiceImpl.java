@@ -8,28 +8,17 @@ import ir.maktabsharif.homeserviceprovidersystem.entity.Wallet;
 import ir.maktabsharif.homeserviceprovidersystem.exception.AlreadyExistException;
 import ir.maktabsharif.homeserviceprovidersystem.exception.ResourceNotFoundException;
 import ir.maktabsharif.homeserviceprovidersystem.repository.CustomerRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
 @org.springframework.stereotype.Service
 @Transactional
-@RequiredArgsConstructor
-
-public class CustomerServiceImpl implements CustomerService {
+public class CustomerServiceImpl extends BaseServiceImpl<Customer, Long> implements CustomerService {
 
     private final CustomerRepository customerRepository;
 
-    public CustomerDto.CustomerResponseDto register(CustomerDto.CustomerRequestDto dto){
-        if (customerRepository.findByEmail(dto.getEmail()).isPresent()){
-            throw new AlreadyExistException("email already exist");
-        }
-        Customer customer = CustomerDto.mapToEntity(dto);
-        customer.setRole(Role.CUSTOMER);
-        Wallet wallet = new Wallet();
-        wallet.setUser(customer);
-        customer.setWallet(wallet);
-        Customer savedCustomer = customerRepository.save(customer);
-        return CustomerDto.mapToDto(savedCustomer);
+    public CustomerServiceImpl(CustomerRepository customerRepository) {
+        super(customerRepository);
+        this.customerRepository = customerRepository;
     }
 
     public CustomerDto.CustomerResponseDto update(Long customerId, CustomerDto.CustomerUpdateDto dto){

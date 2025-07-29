@@ -1,18 +1,19 @@
 package ir.maktabsharif.homeserviceprovidersystem.service;
 
 import ir.maktabsharif.homeserviceprovidersystem.dto.SpecialistDto;
+import ir.maktabsharif.homeserviceprovidersystem.entity.Specialist;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
-public interface SpecialistService {
+public interface SpecialistService extends BaseService<Specialist, Long> {
 
-    SpecialistDto.SpecialistResponseDto register(SpecialistDto.SpecialistRequestDto dto) throws IOException;
+    Optional<Specialist> findByEmail(String email);
     void updateSpecialist(Long specialistId, SpecialistDto.SpecialistUpdateDto dto) throws IOException;
     List<SpecialistDto.SpecialistResponseDto> findAllSpecialists();
     void approveSpecialist(Long specialistId);
     void assignSpecialistToService(Long specialistId, Long serviceId);
     void removeSpecialistFromService(Long specialistId, Long serviceId);
-    List<SpecialistDto.SpecialistOrderHistoryDto> getOrderHistory(Long specialistId);
-    Double getAverageScore(Long specialistId);
+    SpecialistDto.SpecialistRating getAverageScore(Long specialistId);
 }

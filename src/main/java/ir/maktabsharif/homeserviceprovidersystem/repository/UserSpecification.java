@@ -6,6 +6,7 @@ import ir.maktabsharif.homeserviceprovidersystem.entity.Specialist;
 import ir.maktabsharif.homeserviceprovidersystem.entity.User;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Root;
 import org.springframework.data.jpa.domain.Specification;
 
 public class UserSpecification {
@@ -37,7 +38,8 @@ public class UserSpecification {
 
         public static Specification<User> scoreIsBetween(Double minScore, Double maxScore) {
             return (root, query, criteriaBuilder) -> {
-                Join<User, Specialist> specialistJoin = root.join("specialist", JoinType.INNER);
+                Root<User> userRoot = root;
+                Root<Specialist> specialistJoin = criteriaBuilder.treat(userRoot, Specialist.class);
                 if (minScore != null && maxScore != null) {
                     return criteriaBuilder.between(specialistJoin.get("averageScore"), minScore, maxScore);
                 } else if (minScore != null) {

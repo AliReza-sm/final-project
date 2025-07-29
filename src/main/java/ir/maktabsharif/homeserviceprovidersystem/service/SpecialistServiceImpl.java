@@ -7,54 +7,42 @@ import ir.maktabsharif.homeserviceprovidersystem.exception.AlreadyExistException
 import ir.maktabsharif.homeserviceprovidersystem.exception.NotAllowedException;
 import ir.maktabsharif.homeserviceprovidersystem.exception.ResourceNotFoundException;
 import ir.maktabsharif.homeserviceprovidersystem.repository.*;
-import lombok.RequiredArgsConstructor;
+import ir.maktabsharif.homeserviceprovidersystem.service.Helper.OfferHelperService;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @org.springframework.stereotype.Service
 @Transactional
-@RequiredArgsConstructor
-
-public class SpecialistServiceImpl implements SpecialistService{
+public class SpecialistServiceImpl extends BaseServiceImpl<Specialist, Long> implements SpecialistService{
 
     private final SpecialistRepository specialistRepository;
-    private final OfferRepository offerRepository;
-    private final ServiceRepository serviceRepository;
-    private final ReviewRepository reviewRepository;
+    private final OfferHelperService offerHelperService;
+    private final ServiceService serviceService;
+
+    public SpecialistServiceImpl(SpecialistRepository specialistRepository,
+                                 OfferHelperService offerHelperService,
+                                 ServiceService serviceService) {
+        super(specialistRepository);
+        this.specialistRepository = specialistRepository;
+        this.offerHelperService = offerHelperService;
+        this.serviceService = serviceService;
+    }
+
 
     @Override
-    public SpecialistDto.SpecialistResponseDto register(SpecialistDto.SpecialistRequestDto dto) throws IOException {
-        if (specialistRepository.findByEmail(dto.getEmail()).isPresent()) {
-            throw new AlreadyExistException("specialist with this email already exist");
-        }
-        Specialist specialist = new Specialist();
-        specialist.setFirstname(dto.getFirstName());
-        specialist.setLastname(dto.getLastName());
-        specialist.setEmail(dto.getEmail());
-        specialist.setPassword(dto.getPassword());
-        specialist.setRole(Role.SPECIALIST);
-        specialist.setSpecialistStatus(SpecialistStatus.ACTIVE);
-        if (dto.getProfilePhotoData() != null){
-            specialist.setProfilePhotoBytes(dto.getProfilePhotoData().getBytes());
-            specialist.setAccountStatus(AccountStatus.PENDING_APPROVAL);
-        } else {
-            specialist.setAccountStatus(AccountStatus.NEW);
-        }
-        Wallet wallet = new Wallet();
-        specialist.setWallet(wallet);
-        Specialist savedSpecialist = specialistRepository.save(specialist);
-        wallet.setUser(savedSpecialist);
-        return SpecialistDto.mapToDto(savedSpecialist);
+    public Optional<Specialist> findByEmail(String email) {
+        return specialistRepository.findByEmail(email);
     }
 
     @Override
     public void updateSpecialist(Long specialistId, SpecialistDto.SpecialistUpdateDto dto) throws IOException {
         Specialist specialist = specialistRepository.findById(specialistId)
                 .orElseThrow(() -> new ResourceNotFoundException("specialist with this id does not exist"));
-        if (offerRepository.existsBySpecialistAndOfferStatus(specialist, OfferStatus.ACCEPTED)) {
+        if (offerHelperService.existsBySpecialistAndOfferStatus(specialist, OfferStatus.ACCEPTED)) {
             throw new IllegalArgumentException("cannot update specialist with an active job");
         }
         if (dto.getProfilePhotoData() == null && specialist.getProfilePhotoBytes() == null){
@@ -103,7 +91,7 @@ public class SpecialistServiceImpl implements SpecialistService{
     public void assignSpecialistToService(Long specialistId, Long serviceId) {
         Specialist specialist = specialistRepository.findById(specialistId)
                 .orElseThrow(() -> new ResourceNotFoundException("Specialist not found with ID: " + specialistId));
-        Service service = serviceRepository.findById(serviceId)
+        Service service = serviceService.findById(serviceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Service not found with ID: " + serviceId));
 
         specialist.getSpecialistServices().add(service);
@@ -114,7 +102,7 @@ public class SpecialistServiceImpl implements SpecialistService{
     public void removeSpecialistFromService(Long specialistId, Long serviceId) {
         Specialist specialist = specialistRepository.findById(specialistId)
                 .orElseThrow(() -> new ResourceNotFoundException("Specialist not found with ID: " + specialistId));
-        Service service = serviceRepository.findById(serviceId)
+        Service service = serviceService.findById(serviceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Service not found with ID: " + serviceId));
 
         specialist.getSpecialistServices().remove(service);
@@ -122,32 +110,11 @@ public class SpecialistServiceImpl implements SpecialistService{
     }
 
     @Override
-    public List<SpecialistDto.SpecialistOrderHistoryDto> getOrderHistory(Long specialistId) {
+    public SpecialistDto.SpecialistRating getAverageScore(Long specialistId){
         Specialist specialist = specialistRepository.findById(specialistId)
                 .orElseThrow(() -> new ResourceNotFoundException("specialist with this id does not exist"));
-        if (specialist.getAccountStatus() != AccountStatus.APPROVED) {
-            throw new NotAllowedException("cannot get order history");
-        }
-        List<Offer> offers = offerRepository.findBySpecialist(specialist);
-        return offers.stream().map(offer -> {
-            Order order = offer.getOrder();
-            SpecialistDto.SpecialistOrderHistoryDto orderHistoryDto = new SpecialistDto.SpecialistOrderHistoryDto();
-            orderHistoryDto.setOrderId(order.getId());
-            orderHistoryDto.setServiceName(order.getService().getName());
-            orderHistoryDto.setOrderStatus(order.getOrderStatus());
-            orderHistoryDto.setOrderCreatedDate(order.getOrderCreatedDate());
-            orderHistoryDto.setYourProposedPrice(offer.getProposedPrice());
-            orderHistoryDto.setYourRatingForOrder(reviewRepository.findByOrderId(order.getId())
-                    .map(Review::getRating)
-                    .orElse(null));
-            return orderHistoryDto;
-        }).toList();
-    }
-
-    @Override
-    public Double getAverageScore(Long specialistId){
-        Specialist specialist = specialistRepository.findById(specialistId)
-                .orElseThrow(() -> new ResourceNotFoundException("specialist with this id does not exist"));
-        return specialist.getAverageScore();
+        SpecialistDto.SpecialistRating specialistRating = new SpecialistDto.SpecialistRating();
+        specialistRating.setAverageScore(specialist.getAverageScore());
+        return specialistRating;
     }
 }
