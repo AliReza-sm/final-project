@@ -2,12 +2,9 @@ package ir.maktabsharif.homeserviceprovidersystem.service;
 
 import ir.maktabsharif.homeserviceprovidersystem.dto.TransactionDto;
 import ir.maktabsharif.homeserviceprovidersystem.dto.WalletDto;
-import ir.maktabsharif.homeserviceprovidersystem.entity.Customer;
-import ir.maktabsharif.homeserviceprovidersystem.entity.Transaction;
-import ir.maktabsharif.homeserviceprovidersystem.entity.User;
-import ir.maktabsharif.homeserviceprovidersystem.entity.Wallet;
-import ir.maktabsharif.homeserviceprovidersystem.repository.TransactionRepository;
-import ir.maktabsharif.homeserviceprovidersystem.repository.UserRepository;
+import ir.maktabsharif.homeserviceprovidersystem.entity.*;
+import ir.maktabsharif.homeserviceprovidersystem.exception.ResourceNotFoundException;
+import ir.maktabsharif.homeserviceprovidersystem.repository.WalletRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,7 +16,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -27,9 +23,11 @@ import static org.mockito.Mockito.when;
 class WalletServiceImplTest {
 
     @Mock
-    private UserRepository<User> userRepository;
+    private WalletRepository walletRepository;
     @Mock
-    private TransactionRepository transactionRepository;
+    private UserService userService;
+    @Mock
+    private TransactionService transactionService;
 
     @InjectMocks
     private WalletServiceImpl walletService;
@@ -52,7 +50,7 @@ class WalletServiceImplTest {
 
     @Test
     void findWalletByOwnerEmail() {
-        when(userRepository.findByEmail("user@gmail.com")).thenReturn(Optional.of(user));
+        when(userService.findByEmail("user@gmail.com")).thenReturn(Optional.of(user));
         WalletDto.WalletResponseDto result = walletService.findWalletByOwnerEmail("user@gmail.com");
         assertNotNull(result);
         assertEquals(1L, result.getUserId());
@@ -60,17 +58,24 @@ class WalletServiceImplTest {
     }
 
     @Test
-    void getWalletHistory() {
-        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
-        when(transactionRepository.findByWalletId(1L)).thenReturn(List.of(new Transaction()));
-        List<TransactionDto.TransactionResponseDto> result = walletService.getWalletHistory("customer@gmail.com");
-        assertNotNull(result);
-        assertEquals(1, result.size());
+    void depositToWallet() {
+        when(userService.findByEmail("user@gmail.com")).thenReturn(Optional.of(user));
+        when(walletRepository.save(wallet)).thenReturn(wallet);
+        walletService.depositToWallet(user.getEmail(), 200D);
+        assertEquals(300D, wallet.getBalance());
+    }
+
+    @Test
+    void withdrawFromWallet() {
+        when(userService.findByEmail("user@gmail.com")).thenReturn(Optional.of(user));
+        when(walletRepository.save(wallet)).thenReturn(wallet);
+        walletService.withdrawFromWallet(user.getEmail(), 100D);
+        assertEquals(0D, wallet.getBalance());
     }
 
     @Test
     void getWalletBalance(){
-        when(userRepository.findByEmail("user@gmail.com")).thenReturn(Optional.of(user));
+        when(userService.findByEmail("user@gmail.com")).thenReturn(Optional.of(user));
         WalletDto.WalletResponseDto result = walletService.findWalletByOwnerEmail("user@gmail.com");
         assertNotNull(result);
         assertEquals(100.0, result.getBalance());

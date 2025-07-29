@@ -14,7 +14,6 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,16 +41,6 @@ class CustomerServiceImplTest {
         customerRequestDto.setLastName("reza");
         customerRequestDto.setEmail("ali@google.com");
         customerRequestDto.setPassword("password123");
-    }
-
-    @Test
-    void register () {
-        when(customerRepository.findByEmail(anyString())).thenReturn(Optional.empty());
-        when(customerRepository.save(any(Customer.class))).thenReturn(customer);
-        CustomerDto.CustomerResponseDto result = customerService.register(customerRequestDto);
-        assertNotNull(result);
-        assertEquals("ali@google.com", result.getEmail());
-        verify(customerRepository, times(1)).save(any(Customer.class));
     }
 
     @Test

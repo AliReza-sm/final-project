@@ -2,9 +2,7 @@ package ir.maktabsharif.homeserviceprovidersystem.service;
 
 import ir.maktabsharif.homeserviceprovidersystem.dto.ReviewDto;
 import ir.maktabsharif.homeserviceprovidersystem.entity.*;
-import ir.maktabsharif.homeserviceprovidersystem.repository.OrderRepository;
 import ir.maktabsharif.homeserviceprovidersystem.repository.ReviewRepository;
-import ir.maktabsharif.homeserviceprovidersystem.repository.SpecialistRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,9 +22,9 @@ class ReviewServiceImplTest {
     @Mock
     private ReviewRepository reviewRepository;
     @Mock
-    private OrderRepository orderRepository;
+    private OrderService orderService;
     @Mock
-    private SpecialistRepository specialistRepository;
+    private SpecialistService specialistService;
 
     @InjectMocks
     private ReviewServiceImpl reviewService;
@@ -67,14 +65,14 @@ class ReviewServiceImplTest {
 
     @Test
     void leaveReview() {
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(orderService.findById(1L)).thenReturn(Optional.of(order));
         when(reviewRepository.save(any(Review.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(specialistRepository.save(any(Specialist.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(specialistService.save(any(Specialist.class))).thenAnswer(inv -> inv.getArgument(0));
         ReviewDto.ReviewResponseDto result = reviewService.leaveReview(1L, reviewRequestDto, 1L);
         assertNotNull(result);
         assertEquals(5, result.getRating());
         verify(reviewRepository, times(1)).save(any(Review.class));
-        verify(specialistRepository, times(1)).save(any(Specialist.class));
+        verify(specialistService, times(1)).save(any(Specialist.class));
     }
 
     @Test

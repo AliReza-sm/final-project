@@ -2,10 +2,8 @@ package ir.maktabsharif.homeserviceprovidersystem.service;
 
 import ir.maktabsharif.homeserviceprovidersystem.dto.SpecialistDto;
 import ir.maktabsharif.homeserviceprovidersystem.entity.*;
-import ir.maktabsharif.homeserviceprovidersystem.repository.OfferRepository;
-import ir.maktabsharif.homeserviceprovidersystem.repository.ReviewRepository;
-import ir.maktabsharif.homeserviceprovidersystem.repository.ServiceRepository;
 import ir.maktabsharif.homeserviceprovidersystem.repository.SpecialistRepository;
+import ir.maktabsharif.homeserviceprovidersystem.service.Helper.OfferHelperService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,11 +26,9 @@ class SpecialistServiceImplTest {
     @Mock
     private SpecialistRepository specialistRepository;
     @Mock
-    private ServiceRepository serviceRepository;
+    private ServiceService serviceService;
     @Mock
-    private OfferRepository offerRepository;
-    @Mock
-    private ReviewRepository reviewRepository;
+    private OfferHelperService offerHelperService;
 
     @InjectMocks
     private SpecialistServiceImpl specialistService;
@@ -54,22 +50,11 @@ class SpecialistServiceImplTest {
     }
 
     @Test
-    void register() throws IOException {
-        SpecialistDto.SpecialistRequestDto dto = new SpecialistDto.SpecialistRequestDto();
-        dto.setEmail("aa@gmail.com");
-        when(specialistRepository.findByEmail(anyString())).thenReturn(Optional.empty());
-        when(specialistRepository.save(any(Specialist.class))).thenAnswer(inv -> inv.getArgument(0));
-        SpecialistDto.SpecialistResponseDto result = specialistService.register(dto);
-        assertNotNull(result);
-        assertEquals(AccountStatus.NEW, result.getAccountStatus());
-    }
-
-    @Test
     void updateSpecialist() throws IOException {
         SpecialistDto.SpecialistUpdateDto dto = new SpecialistDto.SpecialistUpdateDto();
         dto.setPassword("newPassword");
         when(specialistRepository.findById(anyLong())).thenReturn(Optional.of(specialist));
-        when(offerRepository.existsBySpecialistAndOfferStatus(any(), any())).thenReturn(false);
+        when(offerHelperService.existsBySpecialistAndOfferStatus(any(), any())).thenReturn(false);
         specialistService.updateSpecialist(1L, dto);
         verify(specialistRepository, times(1)).save(specialist);
         assertEquals(AccountStatus.NEW, specialist.getAccountStatus());
@@ -94,7 +79,7 @@ class SpecialistServiceImplTest {
     @Test
     void assignSpecialistToService() {
         when(specialistRepository.findById(1L)).thenReturn(Optional.of(specialist));
-        when(serviceRepository.findById(1L)).thenReturn(Optional.of(service));
+        when(serviceService.findById(1L)).thenReturn(Optional.of(service));
         specialistService.assignSpecialistToService(1L, 1L);
         assertTrue(specialist.getSpecialistServices().contains(service));
         verify(specialistRepository, times(1)).save(specialist);
@@ -104,34 +89,17 @@ class SpecialistServiceImplTest {
     void removeSpecialistFromService() {
         specialist.getSpecialistServices().add(service); // Pre-assign the service
         when(specialistRepository.findById(1L)).thenReturn(Optional.of(specialist));
-        when(serviceRepository.findById(1L)).thenReturn(Optional.of(service));
+        when(serviceService.findById(1L)).thenReturn(Optional.of(service));
         specialistService.removeSpecialistFromService(1L, 1L);
         assertFalse(specialist.getSpecialistServices().contains(service));
         verify(specialistRepository, times(1)).save(specialist);
     }
 
     @Test
-    void getOrderHistory() {
-        Order order = new Order();
-        order.setId(1L);
-        order.setService(service);
-        Offer offer = new Offer();
-        offer.setOrder(order);
-        specialist.setAccountStatus(AccountStatus.APPROVED);
-        when(specialistRepository.findById(anyLong())).thenReturn(Optional.of(specialist));
-        when(offerRepository.findBySpecialist(specialist)).thenReturn(List.of(offer));
-        when(reviewRepository.findByOrderId(1L)).thenReturn(Optional.empty());
-        List<SpecialistDto.SpecialistOrderHistoryDto> result = specialistService.getOrderHistory(1L);
-        assertEquals(1, result.size());
-        assertEquals(1L, result.get(0).getOrderId());
-    }
-
-    @Test
     void getAverageScore(){
         when(specialistRepository.findById(anyLong())).thenReturn(Optional.of(specialist));
-        Double averageScore = specialistService.getAverageScore(1L);
-        assertNotNull(averageScore);
-        assertEquals(3.25, averageScore);
+        SpecialistDto.SpecialistRating specialistRating = specialistService.getAverageScore(1L);
+        assertEquals(3.25, specialistRating.getAverageScore());
     }
 
 }

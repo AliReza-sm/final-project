@@ -1,8 +1,12 @@
 package ir.maktabsharif.homeserviceprovidersystem.service;
 
 import ir.maktabsharif.homeserviceprovidersystem.dto.OrderDto;
+import ir.maktabsharif.homeserviceprovidersystem.dto.OrderFilterDto;
 import ir.maktabsharif.homeserviceprovidersystem.entity.*;
 import ir.maktabsharif.homeserviceprovidersystem.repository.*;
+import ir.maktabsharif.homeserviceprovidersystem.service.Helper.ReviewHelperService;
+import ir.maktabsharif.homeserviceprovidersystem.service.Helper.ServiceHelperService;
+import ir.maktabsharif.homeserviceprovidersystem.service.Helper.SpecialistHelperService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,15 +14,22 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -27,15 +38,15 @@ class OrderServiceImplTest {
     @Mock
     private OrderRepository orderRepository;
     @Mock
-    private CustomerRepository customerRepository;
+    private CustomerService customerService;
     @Mock
-    private ServiceRepository serviceRepository;
+    private ServiceHelperService serviceService;
     @Mock
-    private SpecialistRepository specialistRepository;
+    private SpecialistHelperService specialistService;
     @Mock
-    private TransactionRepository transactionRepository;
+    private ReviewHelperService reviewService;
     @Mock
-    private WalletRepository walletRepository;
+    private WalletService walletService;
 
     @InjectMocks
     private OrderServiceImpl orderService;
@@ -48,6 +59,7 @@ class OrderServiceImplTest {
     private Customer testCustomer;
     private Order testOrder;
     private Offer testOffer;
+    private Review review;
 
     @BeforeEach
     void setUp() {
@@ -72,6 +84,13 @@ class OrderServiceImplTest {
         order.setOrderStatus(OrderStatus.WAITING_FOR_SPECIALIST_TO_ARRIVE);
         order.setSelectedOffer(new Offer());
 
+        review = new Review();
+        review.setId(1L);
+        review.setOrder(order);
+        review.setCustomer(customer);
+        review.setSpecialist(specialist);
+        review.setRating(3);
+
         orderRequestDto = new OrderDto.OrderRequestDto();
         orderRequestDto.setServiceId(1L);
         orderRequestDto.setProposedPrice(120.0);
@@ -81,10 +100,12 @@ class OrderServiceImplTest {
         testCustomer = new Customer();
         testCustomer.setId(2L);
         testCustomer.setWallet(new Wallet());
+        testCustomer.setEmail("customer1@gmail.com");
         testCustomer.getWallet().setBalance(100D);
 
         Specialist testSpecialist = new Specialist();
         testSpecialist.setWallet(new Wallet());
+        testSpecialist.setEmail("specialist1@gmail.com");
         testSpecialist.setSumScore(20D);
         testSpecialist.setAverageScore(0D);
         testSpecialist.setNumberOfReviews(4);
@@ -107,8 +128,8 @@ class OrderServiceImplTest {
 
     @Test
     void createOrder() {
-        when(customerRepository.findById(anyLong())).thenReturn(Optional.of(customer));
-        when(serviceRepository.findById(1L)).thenReturn(Optional.of(service));
+        when(customerService.findById(anyLong())).thenReturn(Optional.of(customer));
+        when(serviceService.findById(1L)).thenReturn(Optional.of(service));
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
         OrderDto.OrderResponseDto result = orderService.createOrder(orderRequestDto, 1L);
         assertNotNull(result);
@@ -117,7 +138,7 @@ class OrderServiceImplTest {
 
     @Test
     void findAvailableOrdersForSpecialist() {
-        when(specialistRepository.findById(anyLong())).thenReturn(Optional.of(specialist));
+        when(specialistService.findById(anyLong())).thenReturn(Optional.of(specialist));
         when(orderRepository.findByOrderStatusInAndServiceIn(any(), any())).thenReturn(List.of(order));
         List<OrderDto.OrderResponseDto> result = orderService.findAvailableOrdersForSpecialist(1L);
         assertNotNull(result);
@@ -157,14 +178,56 @@ class OrderServiceImplTest {
         testOrder.setOrderStatus(OrderStatus.DONE);
         testOrder.setSelectedOffer(testOffer);
         when(orderRepository.findById(100L)).thenReturn(Optional.of(testOrder));
-        when(transactionRepository.save(any())).thenReturn(new Transaction());
-        when(walletRepository.save(any())).thenReturn(testCustomer.getWallet());
         assertEquals(100D, testCustomer.getWallet().getBalance());
         orderService.payForOrder(100L, 2L);
-        assertEquals(20D, testCustomer.getWallet().getBalance());
-        assertEquals(56D, testOffer.getSpecialist().getWallet().getBalance());
+        verify(walletService).withdrawFromWallet(eq(testCustomer.getEmail()), eq(80.0));
+        verify(walletService).depositToWallet(eq(testOffer.getSpecialist().getEmail()), eq(56.0));
         assertEquals(OrderStatus.PAID, testOrder.getOrderStatus());
-        assertEquals(20D, testCustomer.getWallet().getBalance());
-        assertEquals(56D, testOffer.getSpecialist().getWallet().getBalance());
+    }
+
+    @Test
+    void getOrderHistoryForCustomer() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Order> orderPage = new PageImpl<>(Collections.singletonList(order));
+        when(customerService.findById(1L)).thenReturn(Optional.of(customer));
+        when(orderRepository.findAllByCustomerId(1L, pageable)).thenReturn(orderPage);
+        Page<OrderDto.CustomerOrderHistoryDto> result = orderService.getOrderHistoryForCustomer(1L, null, pageable);
+        assertThat(result).isNotNull();
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        assertThat(result.getContent().getFirst().getOrderId()).isEqualTo(1L);
+    }
+
+    @Test
+    void findOrdersHistoryForManager() {
+        OrderFilterDto filter = new OrderFilterDto();
+        filter.setOrderStatus(OrderStatus.WAITING_FOR_SPECIALIST_TO_ARRIVE);
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Order> orderPage = new PageImpl<>(Collections.singletonList(order));
+        when(orderRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(orderPage);
+        Page<OrderDto.ManagerOrderHistorySummaryDto> result = orderService.getOrderHistoryForManager(filter, pageable);
+        assertThat(result).isNotNull();
+        assertThat(result.getTotalElements()).isEqualTo(1);
+    }
+
+    @Test
+    void getManagerOrderDetail(){
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(reviewService.findByOrderId(1L)).thenReturn(Optional.of(review));
+        OrderDto.ManagerOrderDetailDto detail = orderService.getManagerOrderDetail(1L);
+        assertNotNull(detail);
+        assertEquals(1L, detail.getId());
+        assertEquals(3, detail.getReview().getRating());
+    }
+
+    @Test
+    void getOrderDetailForSpecialist() {
+        Offer offerFromSpecialist = new Offer();
+        offerFromSpecialist.setSpecialist(specialist);
+        order.setOffers(Collections.singletonList(offerFromSpecialist));
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(reviewService.findByOrderId(1L)).thenReturn(Optional.of(review));
+        OrderDto.SpecialistOrderDetailDto result = orderService.getOrderDetailForSpecialist(1L, 2L);
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(1L);
     }
 }

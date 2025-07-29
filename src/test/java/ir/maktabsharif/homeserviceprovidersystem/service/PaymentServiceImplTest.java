@@ -10,6 +10,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -21,15 +23,15 @@ import static org.mockito.Mockito.*;
 class PaymentServiceImplTest {
 
     @Mock
-    private CustomerRepository customerRepository;
+    private CustomerService customerService;
     @Mock
     private PaymentRepository paymentRepository;
     @Mock
-    private SpecialistRepository specialistRepository;
+    private SpecialistService specialistService;
     @Mock
-    private TransactionRepository transactionRepository;
+    private TransactionService transactionService;
     @Mock
-    private WalletRepository walletRepository;
+    private WalletService walletService;
 
 
     @InjectMocks
@@ -79,7 +81,7 @@ class PaymentServiceImplTest {
 
     @Test
     void startPayment() {
-        when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
+        when(customerService.findById(1L)).thenReturn(Optional.of(customer));
         when(paymentRepository.findByCustomerId(1L)).thenReturn(Optional.empty());
         when(paymentRepository.save(any(Payment.class))).thenReturn(new Payment());
         PaymentDto.paymentStartDto result = paymentService.startPayment( 1L);
@@ -92,11 +94,15 @@ class PaymentServiceImplTest {
     @Test
     void processPayment() {
         when(paymentRepository.findByCustomerId(1L)).thenReturn(Optional.of(payment));
-        when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
-        when(transactionRepository.save(any(Transaction.class))).thenReturn(new Transaction());
-        when(walletRepository.save(any(Wallet.class))).thenReturn(new Wallet());
-        specialistRepository.save(specialist);
+        when(customerService.findById(1L)).thenReturn(Optional.of(customer));
+        specialistService.save(specialist);
         paymentService.processPayment(paymentRequestDto);
         verify(paymentRepository, times(1)).delete(payment);
+    }
+
+    @Test
+    void getUrl() throws MalformedURLException {
+        URL paymentPage = paymentService.getPaymentPage(customer.getId());
+        assertEquals(new URL("http://localhost:8081/payment.html?customerId=" + customer.getId()), paymentPage);
     }
 }

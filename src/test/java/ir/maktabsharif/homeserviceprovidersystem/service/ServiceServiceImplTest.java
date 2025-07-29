@@ -2,7 +2,6 @@ package ir.maktabsharif.homeserviceprovidersystem.service;
 
 import ir.maktabsharif.homeserviceprovidersystem.dto.ServiceDto;
 import ir.maktabsharif.homeserviceprovidersystem.entity.Service;
-import ir.maktabsharif.homeserviceprovidersystem.repository.OrderRepository;
 import ir.maktabsharif.homeserviceprovidersystem.repository.ServiceRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,7 +23,7 @@ class ServiceServiceImplTest {
     @Mock
     private ServiceRepository serviceRepository;
     @Mock
-    private OrderRepository orderRepository;
+    private OrderService orderService;
 
     @InjectMocks
     private ServiceServiceImpl serviceService;
@@ -66,7 +65,7 @@ class ServiceServiceImplTest {
     @Test
     void deleteService() {
         when(serviceRepository.existsById(1L)).thenReturn(true);
-        when(orderRepository.existsByServiceId(1L)).thenReturn(false);
+        when(orderService.existByServiceId(1L)).thenReturn(false);
         serviceService.deleteService(1L);
         verify(serviceRepository, times(1)).deleteById(1L);
     }
@@ -74,7 +73,7 @@ class ServiceServiceImplTest {
     @Test
     void findById() {
         when(serviceRepository.findById(1L)).thenReturn(Optional.of(service));
-        ServiceDto.ServiceResponseDto result = serviceService.findById(1L);
+        ServiceDto.ServiceResponseDto result = serviceService.findServiceById(1L);
         assertNotNull(result);
         assertEquals(1L, result.getId());
     }
@@ -82,7 +81,7 @@ class ServiceServiceImplTest {
     @Test
     void findAll() {
         when(serviceRepository.findAll()).thenReturn(List.of(service));
-        List<ServiceDto.ServiceResponseDto> result = serviceService.findAll();
+        List<ServiceDto.ServiceResponseDto> result = serviceService.findAllServices();
         assertNotNull(result);
         assertEquals(1, result.size());
     }

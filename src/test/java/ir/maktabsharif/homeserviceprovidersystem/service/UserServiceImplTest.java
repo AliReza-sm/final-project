@@ -6,7 +6,6 @@ import ir.maktabsharif.homeserviceprovidersystem.entity.Customer;
 import ir.maktabsharif.homeserviceprovidersystem.entity.Role;
 import ir.maktabsharif.homeserviceprovidersystem.entity.User;
 import ir.maktabsharif.homeserviceprovidersystem.repository.UserRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -17,20 +16,20 @@ import org.springframework.data.jpa.domain.Specification;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
 
 @ExtendWith(MockitoExtension.class)
-class ManagerServiceImplTest {
+class UserServiceImplTest {
 
     @Mock
     private UserRepository<User> userRepository;
 
     @InjectMocks
-    private ManagerServiceImpl managerService;
+    private UserServiceImpl userService;
 
     @Test
-    void testFilterUsers() {
+    void FilterUsers() {
 
         UserFilterDto filterDto = new UserFilterDto();
         filterDto.setRole(Role.CUSTOMER);
@@ -43,7 +42,7 @@ class ManagerServiceImplTest {
         customer.setRole(Role.CUSTOMER);
 
         when(userRepository.findAll(any(Specification.class))).thenReturn(List.of(customer));
-        List<UserDto.UserResponseDto> results = managerService.filterUsers(filterDto);
+        List<UserDto.UserResponseDto> results = userService.filterUsers(filterDto);
         assertNotNull(results);
         assertEquals(1, results.size());
         assertEquals("ali@gmail.com", results.getFirst().getEmail());
