@@ -1,6 +1,7 @@
 package ir.maktabsharif.homeserviceprovidersystem.dto;
 
 import ir.maktabsharif.homeserviceprovidersystem.entity.Customer;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -25,9 +26,14 @@ public class CustomerDto {
 
     @Data
     public static class CustomerUpdateDto{
+        @Pattern(regexp = "^[A-Za-z]+$", message = "firstname must contain only alphabetic characters")
         private String firstName;
+        @Pattern(regexp = "^[A-Za-z]+$", message = "firstname must contain only alphabetic characters")
         private String lastName;
+        @Pattern(regexp = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$",
+                message = "Invalid email format")
         private String email;
+        @Pattern(regexp = "^[A-Za-z0-9]{8,}$", message = "password must be at least 8 character or number")
         private String password;
     }
 
