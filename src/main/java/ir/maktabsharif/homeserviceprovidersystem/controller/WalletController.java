@@ -1,14 +1,13 @@
 package ir.maktabsharif.homeserviceprovidersystem.controller;
 
-import ir.maktabsharif.homeserviceprovidersystem.dto.TransactionDto;
 import ir.maktabsharif.homeserviceprovidersystem.dto.WalletDto;
+import ir.maktabsharif.homeserviceprovidersystem.security.MyUserDetails;
 import ir.maktabsharif.homeserviceprovidersystem.service.WalletService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/wallet")
@@ -18,18 +17,15 @@ public class WalletController {
 
     private final WalletService walletService;
 
-    @GetMapping("/{email}")
-    public ResponseEntity<WalletDto.WalletResponseDto> getMyWallet(@PathVariable String email) {
-        return ResponseEntity.ok(walletService.findWalletByOwnerEmail(email));
+    @GetMapping
+    @PreAuthorize("hasAnyAuthority('CUSTOMER', 'SPECIALIST', 'MANAGER')")
+    public ResponseEntity<WalletDto.WalletResponseDto> getMyWallet(@AuthenticationPrincipal MyUserDetails userDetails) {
+        return ResponseEntity.ok(walletService.findWalletByOwnerEmail(userDetails.getUsername()));
     }
 
-    @GetMapping("/transactions/{email}")
-    public ResponseEntity<List<TransactionDto.TransactionResponseDto>> getWalletHistory(@PathVariable String email) {
-        return ResponseEntity.ok(walletService.getWalletHistory(email));
-    }
-
-    @GetMapping("/balance/{email}")
-    public ResponseEntity<Double> getBalance(@PathVariable String email) {
-        return ResponseEntity.ok(walletService.getWalletBalance(email));
+    @GetMapping("/balance")
+    @PreAuthorize("hasAuthority('SPECIALIST')")
+    public ResponseEntity<Double> getBalance(@AuthenticationPrincipal MyUserDetails userDetails) {
+        return ResponseEntity.ok(walletService.getWalletBalance(userDetails.getUsername()));
     }
 }
