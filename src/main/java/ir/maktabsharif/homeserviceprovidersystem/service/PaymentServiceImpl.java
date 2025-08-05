@@ -54,7 +54,7 @@ public class PaymentServiceImpl extends BaseServiceImpl<Payment, Long> implement
     }
 
     @Override
-    public void processPayment(PaymentDto.PaymentRequestDto request) {
+    public PaymentDto.PaymentRequestDto processPayment(PaymentDto.PaymentRequestDto request) {
         Payment payment = paymentRepository.findByCustomerId(request.getCustomerId())
                 .orElseThrow(() -> new ResourceNotFoundException("No payment found for this customer. Please start again."));
 
@@ -73,6 +73,7 @@ public class PaymentServiceImpl extends BaseServiceImpl<Payment, Long> implement
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found"));
         walletService.depositToWallet(customer.getEmail(), request.getAmount());
         paymentRepository.delete(payment);
+        return request;
     }
 
     @Override

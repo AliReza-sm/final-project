@@ -1,7 +1,6 @@
 package ir.maktabsharif.homeserviceprovidersystem.service;
 
 import ir.maktabsharif.homeserviceprovidersystem.dto.ServiceDto;
-import ir.maktabsharif.homeserviceprovidersystem.dto.SpecialistDto;
 import ir.maktabsharif.homeserviceprovidersystem.entity.Service;
 
 import java.util.List;

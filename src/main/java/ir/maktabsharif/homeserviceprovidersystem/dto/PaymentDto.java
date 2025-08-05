@@ -1,5 +1,6 @@
 package ir.maktabsharif.homeserviceprovidersystem.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -21,5 +22,11 @@ public class PaymentDto {
     public static class paymentStartDto {
         private String captchaText;
         private LocalDateTime expiresAt;
+    }
+
+    @Data
+    @AllArgsConstructor
+    public static class paymentMessage {
+        private String message;
     }
 }

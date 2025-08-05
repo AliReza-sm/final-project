@@ -15,21 +15,19 @@ import java.net.URL;
 @RestController
 @RequestMapping("/api/payment")
 @RequiredArgsConstructor
-
 public class PaymentController {
 
     private final PaymentService paymentService;
 
-    @PostMapping("/start")
-    @PreAuthorize("hasAuthority('CUSTOMER')")
+    @PostMapping("/start/{customerId}")
     public ResponseEntity<PaymentDto.paymentStartDto> startPayment(
-            @AuthenticationPrincipal MyUserDetails userDetails) {
-        PaymentDto.paymentStartDto response = paymentService.startPayment(userDetails.getId());
+            @PathVariable Long customerId) {
+        PaymentDto.paymentStartDto response = paymentService.startPayment(customerId);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/process")
-    public ResponseEntity<PaymentDto.PaymentRequestDto> processPayment(@RequestBody PaymentDto.PaymentRequestDto request) {
+    public ResponseEntity<PaymentDto.PaymentRequestDto > processPayment(@RequestBody PaymentDto.PaymentRequestDto request) {
         paymentService.processPayment(request);
         return ResponseEntity.ok(request);
     }

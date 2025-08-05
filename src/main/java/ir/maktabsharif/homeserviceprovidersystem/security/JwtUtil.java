@@ -2,6 +2,7 @@ package ir.maktabsharif.homeserviceprovidersystem.security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import ir.maktabsharif.homeserviceprovidersystem.exception.SecurityCustomException;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -48,16 +49,15 @@ public class JwtUtil {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
         } catch (SecurityException e) {
-            System.out.println("Invalid JWT signature: " + e.getMessage());
+            throw new SecurityCustomException("Invalid JWT signature: " + e.getMessage());
         } catch (MalformedJwtException e) {
-            System.out.println("Invalid JWT token: " + e.getMessage());
+            throw new SecurityCustomException("Invalid JWT token: " + e.getMessage());
         } catch (ExpiredJwtException e) {
-            System.out.println("JWT token is expired: " + e.getMessage());
+            throw new SecurityCustomException("JWT token is expired: " + e.getMessage());
         } catch (UnsupportedJwtException e) {
-            System.out.println("JWT token is unsupported: " + e.getMessage());
+            throw new SecurityCustomException("JWT token is unsupported: " + e.getMessage());
         } catch (IllegalArgumentException e) {
-            System.out.println("JWT claims string is empty: " + e.getMessage());
+            throw new SecurityCustomException("JWT claims string is empty: " + e.getMessage());
         }
-        return false;
     }
 }

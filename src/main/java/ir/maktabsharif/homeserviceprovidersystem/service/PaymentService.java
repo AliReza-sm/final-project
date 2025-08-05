@@ -10,6 +10,6 @@ import java.net.URL;
 public interface PaymentService extends BaseService<Payment, Long> {
 
     PaymentDto.paymentStartDto startPayment(Long customerId);
-    void processPayment(PaymentDto.PaymentRequestDto request);
+    PaymentDto.PaymentRequestDto  processPayment(PaymentDto.PaymentRequestDto request);
     URL getPaymentPage(Long customerId) throws MalformedURLException;
 }
