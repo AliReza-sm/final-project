@@ -10,6 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.io.IOException;
 import java.util.List;
@@ -17,7 +18,6 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -30,11 +30,24 @@ class SpecialistServiceImplTest {
     @Mock
     private OfferHelperService offerHelperService;
 
+    @Mock
+    private TemporaryEmailService temporaryEmailService;
+
+    @Mock
+    private EmailServiceImpl emailService;
+
+    @Mock
+    private VerificationTokenServiceImpl verificationTokenService;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
     @InjectMocks
     private SpecialistServiceImpl specialistService;
 
     private Specialist specialist;
     private Service service;
+    private VerificationToken verificationToken;
 
     @BeforeEach
     void setUp() {
@@ -47,6 +60,17 @@ class SpecialistServiceImplTest {
         service = new Service();
         service.setId(1L);
         service.setName("fixing");
+
+        verificationToken = new VerificationToken();
+        verificationToken.setId(1L);
+        verificationToken.setToken("aa");
+        verificationToken.setVerificationTokenType(VerificationTokenType.UPDATE);
+    }
+
+    @Test
+    void findByEmail() {
+        when(specialistRepository.findByEmail(anyString())).thenReturn(Optional.of(specialist));
+        assertEquals(specialist, specialistService.findByEmail(specialist.getEmail()).get());
     }
 
     @Test
@@ -55,6 +79,9 @@ class SpecialistServiceImplTest {
         dto.setPassword("newPassword");
         when(specialistRepository.findById(anyLong())).thenReturn(Optional.of(specialist));
         when(offerHelperService.existsBySpecialistAndOfferStatus(any(), any())).thenReturn(false);
+        when(passwordEncoder.encode(dto.getPassword())).thenReturn("encodedPassword");
+        SpecialistDto.SpecialistPhotoUpdateDto specialistPhotoUpdateDto = new SpecialistDto.SpecialistPhotoUpdateDto();
+        specialistPhotoUpdateDto.setProfilePhotoData(null);
         specialistService.updateSpecialist(1L, dto);
         verify(specialistRepository, times(1)).save(specialist);
         assertEquals(AccountStatus.NEW, specialist.getAccountStatus());
@@ -70,7 +97,6 @@ class SpecialistServiceImplTest {
     @Test
     void approveSpecialist() {
         when(specialistRepository.findById(1L)).thenReturn(Optional.of(specialist));
-//        ArgumentCaptor<Specialist> captor = ArgumentCaptor.forClass(Specialist.class);
         specialistService.approveSpecialist(1L);
         verify(specialistRepository).save(specialist);
         assertEquals(AccountStatus.APPROVED, specialist.getAccountStatus());

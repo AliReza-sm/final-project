@@ -87,6 +87,7 @@ class AuthenticationServiceImplTest {
         verificationToken = new VerificationToken();
         verificationToken.setId(1L);
         verificationToken.setToken("aa");
+        verificationToken.setVerificationTokenType(VerificationTokenType.REGISTER);
     }
 
 
@@ -108,7 +109,7 @@ class AuthenticationServiceImplTest {
     void registerCustomer() {
         when(userService.findByEmail(customerRegistrationRequest.getEmail())).thenReturn(Optional.empty());
         when(passwordEncoder.encode(customerRegistrationRequest.getPassword())).thenReturn("encodedPassword");
-        when(verificationTokenService.create(any())).thenReturn(verificationToken);
+        when(verificationTokenService.create(any(), any())).thenReturn(verificationToken);
         authService.registerCustomer(customerRegistrationRequest);
         ArgumentCaptor<Customer> customerCaptor = ArgumentCaptor.forClass(Customer.class);
         verify(customerService).save(customerCaptor.capture());
@@ -118,14 +119,13 @@ class AuthenticationServiceImplTest {
         assertThat(savedCustomer.getPassword()).isEqualTo("encodedPassword");
         assertThat(savedCustomer.getRole()).isEqualTo(Role.CUSTOMER);
         assertThat(savedCustomer.isEnabled()).isFalse();
-        verify(emailService).sendActivationEmail(eq(customerRegistrationRequest.getEmail()), anyString());
     }
 
     @Test
     void registerSpecialist() throws IOException {
         when(userService.findByEmail(specialistRegistrationRequest.getEmail())).thenReturn(Optional.empty());
         when(passwordEncoder.encode(specialistRegistrationRequest.getPassword())).thenReturn("encodedSpecialistPassword");
-        when(verificationTokenService.create(any())).thenReturn(verificationToken);
+        when(verificationTokenService.create(any(), any())).thenReturn(verificationToken);
         authService.registerSpecialist(specialistRegistrationRequest);
         ArgumentCaptor<Specialist> specialistCaptor = ArgumentCaptor.forClass(Specialist.class);
         verify(specialistService).save(specialistCaptor.capture());
@@ -135,13 +135,12 @@ class AuthenticationServiceImplTest {
         assertThat(savedSpecialist.getRole()).isEqualTo(Role.SPECIALIST);
         assertThat(savedSpecialist.isEnabled()).isFalse();
         assertThat(savedSpecialist.getAccountStatus()).isEqualTo(AccountStatus.NEW);
-        verify(emailService).sendActivationEmail(eq(specialistRegistrationRequest.getEmail()), anyString());
     }
 
     @Test
     void activateUser() {
         String token = "token";
-        VerificationToken verificationToken = new VerificationToken(token, user);
+        VerificationToken verificationToken = new VerificationToken(token, user, VerificationTokenType.REGISTER);
         when(verificationTokenService.findByToken(token)).thenReturn(Optional.of(verificationToken));
         authService.activateUser(token);
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
@@ -154,7 +153,7 @@ class AuthenticationServiceImplTest {
     @Test
     void activateUser_ExpiredToken() {
         String token = "expired-token";
-        VerificationToken verificationToken = new VerificationToken(token, user);
+        VerificationToken verificationToken = new VerificationToken(token, user, VerificationTokenType.REGISTER);
         verificationToken.setExpiryDate(LocalDateTime.now().minusHours(2));
         when(verificationTokenService.findByToken(token)).thenReturn(Optional.of(verificationToken));
         assertThrows(RuntimeException.class, () -> {

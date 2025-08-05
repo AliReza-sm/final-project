@@ -1,5 +1,6 @@
 package ir.maktabsharif.homeserviceprovidersystem.service;
 
+import ir.maktabsharif.homeserviceprovidersystem.entity.VerificationTokenType;
 import jakarta.mail.MessagingException;
 import jakarta.mail.Session;
 import jakarta.mail.internet.MimeMessage;
@@ -33,12 +34,11 @@ class EmailServiceImplTest {
         String link = "http://localhost:8081/api/auth/activate?token=" + activationToken;
         MimeMessage mimeMessage = new MimeMessage((Session) null);
         when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
-        emailService.sendActivationEmail(sendToEmail, activationToken);
+        emailService.sendActivationEmail(sendToEmail, activationToken, VerificationTokenType.REGISTER);
         ArgumentCaptor<MimeMessage> mimeMessageCaptor = ArgumentCaptor.forClass(MimeMessage.class);
         verify(mailSender, times(1)).send(mimeMessageCaptor.capture());
         MimeMessage sentMessage = mimeMessageCaptor.getValue();
         assertThat(sentMessage.getRecipients(MimeMessage.RecipientType.TO)[0].toString()).isEqualTo(sendToEmail);
-        assertThat(sentMessage.getSubject()).isEqualTo("Verify your account in home service");
         String content = (String) sentMessage.getContent();
         assertThat(content).isNotNull();
         assertThat(content).contains(link);

@@ -4,6 +4,7 @@ import ir.maktabsharif.homeserviceprovidersystem.dto.OrderDto;
 import ir.maktabsharif.homeserviceprovidersystem.dto.OrderFilterDto;
 import ir.maktabsharif.homeserviceprovidersystem.entity.*;
 import ir.maktabsharif.homeserviceprovidersystem.repository.*;
+import ir.maktabsharif.homeserviceprovidersystem.service.Helper.OfferHelperService;
 import ir.maktabsharif.homeserviceprovidersystem.service.Helper.ReviewHelperService;
 import ir.maktabsharif.homeserviceprovidersystem.service.Helper.ServiceHelperService;
 import ir.maktabsharif.homeserviceprovidersystem.service.Helper.SpecialistHelperService;
@@ -46,6 +47,8 @@ class OrderServiceImplTest {
     @Mock
     private ReviewHelperService reviewService;
     @Mock
+    private OfferHelperService offerHelperService;
+    @Mock
     private WalletService walletService;
 
     @InjectMocks
@@ -76,6 +79,7 @@ class OrderServiceImplTest {
         specialist.setId(2L);
         specialist.setEmail("specialist@gmail.com");
         specialist.setSpecialistServices(Set.of(service));
+        specialist.setAccountStatus(AccountStatus.APPROVED);
 
         order = new Order();
         order.setId(1L);
@@ -124,6 +128,11 @@ class OrderServiceImplTest {
         testOffer.setSpecialist(testSpecialist);
         testOffer.setProposedStartTime(LocalDateTime.now().minusHours(4));
         testOffer.setTimeToEndTheJobInHours(1);
+    }
+
+    @Test
+    void existByServiceId() {
+        assertFalse(orderService.existByServiceId(1L));
     }
 
     @Test
@@ -220,12 +229,36 @@ class OrderServiceImplTest {
     }
 
     @Test
+    void getOrderHistoryForSpecialist_Success_WithReview() {
+        Long specialistId = 2L;
+        Pageable pageable = PageRequest.of(0, 10);
+        Service service = new Service();
+        service.setName("Gardening");
+        testOrder.setService(service);
+        Page<Offer> offerPage = new PageImpl<>(Collections.singletonList(testOffer), pageable, 1);
+        when(specialistService.findById(specialistId)).thenReturn(Optional.of(specialist));
+        when(offerHelperService.findBySpecialistId(specialistId, pageable)).thenReturn(offerPage);
+        Page<OrderDto.SpecialistOrderHistoryDto> result = orderService.getOrderHistoryForSpecialist(specialistId, pageable);
+        assertThat(result).isNotNull();
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        assertThat(result.getContent()).hasSize(1);
+        OrderDto.SpecialistOrderHistoryDto dto = result.getContent().getFirst();
+        assertThat(dto.getOrderId()).isEqualTo(testOrder.getId());
+        assertThat(dto.getServiceName()).isEqualTo(service.getName());
+        assertThat(dto.getOrderStatus()).isEqualTo(testOrder.getOrderStatus());
+        assertThat(dto.getYourProposedPrice()).isEqualTo(testOffer.getProposedPrice());
+        verify(specialistService, times(1)).findById(specialistId);
+        verify(offerHelperService, times(1)).findBySpecialistId(specialistId, pageable);
+    }
+
+    @Test
     void getOrderDetailForSpecialist() {
         Offer offerFromSpecialist = new Offer();
         offerFromSpecialist.setSpecialist(specialist);
         order.setOffers(Collections.singletonList(offerFromSpecialist));
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
         when(reviewService.findByOrderId(1L)).thenReturn(Optional.of(review));
+        order.setSelectedOffer(offerFromSpecialist);
         OrderDto.SpecialistOrderDetailDto result = orderService.getOrderDetailForSpecialist(1L, 2L);
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(1L);
