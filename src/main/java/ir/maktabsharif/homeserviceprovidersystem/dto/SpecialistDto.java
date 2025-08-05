@@ -1,10 +1,9 @@
 package ir.maktabsharif.homeserviceprovidersystem.dto;
 
 import ir.maktabsharif.homeserviceprovidersystem.entity.AccountStatus;
-import ir.maktabsharif.homeserviceprovidersystem.entity.OrderStatus;
 import ir.maktabsharif.homeserviceprovidersystem.entity.Specialist;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.NotNull;
+import jakarta.annotation.Nullable;
+import jakarta.validation.constraints.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -27,38 +26,22 @@ public class SpecialistDto {
     }
 
     @EqualsAndHashCode(callSuper = true)
-    @Setter
-    @Getter
+    @Data
     public static class SpecialistRequestDto extends UserDto.UserRegistrationDto{
         private MultipartFile profilePhotoData;
-        @Max(value = 300000, message = "file must be at most 300KB")
-        private Long fileSize;
-
-        public SpecialistRequestDto() {
-        }
-
-        public SpecialistRequestDto(MultipartFile profilePhotoData) {
-            this.profilePhotoData = profilePhotoData;
-            if (profilePhotoData != null) {
-                this.fileSize = profilePhotoData.getSize();
-            }
-        }
-
-        public void setProfilePhotoData(@NotNull MultipartFile profilePhotoData) {
-            this.profilePhotoData = profilePhotoData;
-            if (profilePhotoData != null) {
-                this.fileSize = profilePhotoData.getSize();
-            }
-        }
     }
 
     @Data
     public static class SpecialistUpdateDto{
+        @Email(message = "email format is wrong")
         private String email;
+        @Pattern(regexp = "^[A-Za-z0-9]{8,}$", message = "password must be at least 8 character or number")
         private String password;
+    }
+
+    @Data
+    public static class SpecialistPhotoUpdateDto{
         private MultipartFile profilePhotoData;
-        @Max(value = 300000, message = "file must be at most 300KB")
-        private Long fileSize;
     }
 
     @Data

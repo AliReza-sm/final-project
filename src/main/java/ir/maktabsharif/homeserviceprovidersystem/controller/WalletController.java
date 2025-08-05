@@ -24,7 +24,7 @@ public class WalletController {
     }
 
     @GetMapping("/balance")
-    @PreAuthorize("hasAuthority('SPECIALIST')")
+    @PreAuthorize("hasAnyAuthority('SPECIALIST', 'CUSTOMER')")
     public ResponseEntity<Double> getBalance(@AuthenticationPrincipal MyUserDetails userDetails) {
         return ResponseEntity.ok(walletService.getWalletBalance(userDetails.getUsername()));
     }

@@ -2,6 +2,7 @@ package ir.maktabsharif.homeserviceprovidersystem.service;
 
 import ir.maktabsharif.homeserviceprovidersystem.entity.User;
 import ir.maktabsharif.homeserviceprovidersystem.entity.VerificationToken;
+import ir.maktabsharif.homeserviceprovidersystem.entity.VerificationTokenType;
 import ir.maktabsharif.homeserviceprovidersystem.repository.VerificationTokenRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,8 +19,8 @@ public class VerificationTokenServiceImpl implements VerificationTokenService {
     private final VerificationTokenRepository verificationTokenRepository;
 
     @Override
-    public VerificationToken create(User user) {
-        VerificationToken verificationToken = new VerificationToken(generateRandomToken(), user);
+    public VerificationToken create(User user, VerificationTokenType tokenType) {
+        VerificationToken verificationToken = new VerificationToken(generateRandomToken(), user, tokenType);
         return verificationTokenRepository.save(verificationToken);
     }
 

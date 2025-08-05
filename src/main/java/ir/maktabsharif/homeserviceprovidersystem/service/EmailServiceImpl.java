@@ -1,5 +1,6 @@
 package ir.maktabsharif.homeserviceprovidersystem.service;
 
+import ir.maktabsharif.homeserviceprovidersystem.entity.VerificationTokenType;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -14,22 +15,36 @@ public class EmailServiceImpl implements EmailService {
     private final JavaMailSender mailSender;
 
     @Override
-    public void sendActivationEmail(String to, String token) {
+    public void sendActivationEmail(String to, String token, VerificationTokenType verificationTokenType) {
         MimeMessage mimeMessage = mailSender.createMimeMessage();
         try {
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
-            String htmlContent = buildHtmlEmail(token);
+            String htmlContent = buildHtmlEmail(token, verificationTokenType);
+            helper.setSubject("Verify your email in home service");
             helper.setText(htmlContent, true);
             helper.setTo(to);
-            helper.setSubject("Verify your account in home service");
             mailSender.send(mimeMessage);
         } catch (MessagingException e) {
             throw new RuntimeException("Failed to send email", e);
         }
     }
 
-    private String buildHtmlEmail(String token) {
+    private String buildHtmlEmail(String token, VerificationTokenType verificationTokenType) {
         String activationLink = "http://localhost:8081/api/auth/activate?token=" + token;
+        String header = "";
+        String content = "";
+        String footer = "";
+        switch (verificationTokenType) {
+            case REGISTER:
+                header = "Welcome to Home Service!";
+                content = "Thank you for registering. Please click the button below to activate your account.";
+                footer = "If you did not register for this account, please ignore this email.";
+                break;
+            case UPDATE:
+                header = "Update your Home Service email";
+                content = "Please click the button below to update your account's email.";
+                footer = "If you did not update your email, please ignore this email.";
+        }
         return "<!DOCTYPE html>" +
                "<html lang=\"en\">" +
                "<head>" +
@@ -50,17 +65,17 @@ public class EmailServiceImpl implements EmailService {
                "<body>" +
                "  <div class=\"container\">" +
                "    <div class=\"header\">" +
-               "      <h1>Welcome to Home Service!</h1>" +
+               "      <h1>" + header + "</h1>" +
                "    </div>" +
                "    <div class=\"content\">" +
-               "      <p>Thank you for registering. Please click the button below to activate your account.</p>" +
+               "      <p>"+ content +"</p>" +
                "      <p>This link will expire in one hour.</p>" +
                "    </div>" +
                "    <div class=\"button-container\">" +
                "      <a href=\"" + activationLink + "\" class=\"button\">Activate Account</a>" +
                "    </div>" +
                "    <div class=\"footer\">" +
-               "      <p>If you did not register for this account, please ignore this email.</p>" +
+               "      <p>"+ footer +"</p>" +
                "    </div>" +
                "  </div>" +
                "</body>" +

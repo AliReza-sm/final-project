@@ -24,12 +24,15 @@ public class VerificationToken extends BaseEntity<Long> {
     @JoinColumn(nullable = false, name = "user_id")
     private User user;
 
+    private VerificationTokenType verificationTokenType;
+
     private LocalDateTime expiryDate;
 
-    public VerificationToken(String token, User user) {
+    public VerificationToken(String token, User user, VerificationTokenType verificationTokenType) {
         this.token = token;
         this.user = user;
         this.expiryDate = LocalDateTime.now().plusMinutes(MINUTES_TO_EXPIRE);
+        this.verificationTokenType = verificationTokenType;
     }
     
 }

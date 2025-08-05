@@ -5,12 +5,12 @@ import ir.maktabsharif.homeserviceprovidersystem.security.MyUserDetails;
 import ir.maktabsharif.homeserviceprovidersystem.service.SpecialistService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
@@ -23,11 +23,20 @@ public class SpecialistController {
 
     private final SpecialistService specialistService;
 
-    @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PutMapping
     @PreAuthorize("hasAuthority('SPECIALIST')")
     public ResponseEntity<Void> updateSpecialist(@AuthenticationPrincipal MyUserDetails userDetails,
-                                                 @Valid @ModelAttribute SpecialistDto.SpecialistUpdateDto dto) throws IOException {
+                                                 @Valid @RequestBody SpecialistDto.SpecialistUpdateDto dto) throws IOException {
         specialistService.updateSpecialist(userDetails.getId(), dto);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping(value = "/update/photo", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    @PreAuthorize("hasAuthority('SPECIALIST')")
+    public ResponseEntity<Void> updateSpecialistPhoto(
+            @AuthenticationPrincipal MyUserDetails userDetails,
+            @ModelAttribute MultipartFile photo) throws IOException {
+        specialistService.updateSpecialistPhoto(userDetails.getId(), photo);
         return ResponseEntity.noContent().build();
     }
 
@@ -39,7 +48,7 @@ public class SpecialistController {
 
     @PutMapping("/{specialistId}/approve")
     @PreAuthorize("hasAuthority('MANAGER')")
-    public ResponseEntity<Void> approveSpecialist(@Valid@PathVariable Long specialistId) {
+    public ResponseEntity<Void> approveSpecialist(@PathVariable Long specialistId) {
         specialistService.approveSpecialist(specialistId);
         return ResponseEntity.ok().build();
     }

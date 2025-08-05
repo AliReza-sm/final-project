@@ -229,6 +229,9 @@ public class OrderServiceImpl extends BaseServiceImpl<Order, Long> implements Or
                 spec = spec.and(forSpecialist(filter.getSpecialistId()));
             }
             if (filter.getStartDate() != null && filter.getEndDate() != null) {
+                if (filter.getStartDate().isAfter(filter.getEndDate())){
+                    throw new NotAllowedException("Start date cannot be after end date.");
+                }
                 spec = spec.and(inDateRange(
                         filter.getStartDate().atStartOfDay(),
                         filter.getEndDate().atStartOfDay()

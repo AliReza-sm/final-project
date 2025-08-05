@@ -93,7 +93,7 @@ public class OrderController {
     @GetMapping("/history/manager")
     @PreAuthorize("hasAuthority('MANAGER')")
     public ResponseEntity<Page<OrderDto.ManagerOrderHistorySummaryDto>> getManagerOrderHistory(
-            OrderFilterDto filter,
+            @Valid OrderFilterDto filter,
             Pageable pageable) {
         Page<OrderDto.ManagerOrderHistorySummaryDto> history = orderService.getOrderHistoryForManager(filter, pageable);
         return ResponseEntity.ok(history);
